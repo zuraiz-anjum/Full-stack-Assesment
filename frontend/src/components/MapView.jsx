@@ -1,6 +1,7 @@
 import L from "leaflet";
 import { useMemo } from "react";
 import { MapContainer, Marker, Polyline, Popup, TileLayer, useMap } from "react-leaflet";
+import { formatWallClock } from "../lib/datetime";
 
 const STATUS_COLORS = {
   OFF_DUTY: "#94a3b8",
@@ -107,7 +108,7 @@ export default function MapView({ waypoints, geometry, stops }) {
                 {s.location.label}
                 <br />
                 <span className="text-ink-500">
-                  {new Date(s.start).toLocaleString()} &rarr; {new Date(s.end).toLocaleString()}
+                  {formatWallClock(s.start)} &rarr; {formatWallClock(s.end)}
                 </span>
               </Popup>
             </Marker>

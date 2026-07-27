@@ -14,6 +14,7 @@ from trips.services.geo import interpolate_along_path
 from trips.services.hos_engine import DutyStatus, RouteLeg, simulate_trip
 from trips.services.log_builder import build_daily_logs
 from trips.services.routing import GeocodedPlace, RouteResult, geocode, get_route, reverse_geocode
+from trips.services.tz_resolver import local_wall_clock_now
 
 LEG_CURRENT_TO_PICKUP = "current -> pickup"
 LEG_PICKUP_TO_DROPOFF = "pickup -> dropoff"
@@ -26,11 +27,16 @@ def plan_trip(
     current_cycle_used_hours: float,
     start_datetime: datetime | None = None,
 ) -> dict:
-    start_datetime = start_datetime or datetime.now()
-
     current = geocode(current_location_text)
     pickup = geocode(pickup_location_text)
     dropoff = geocode(dropoff_location_text)
+
+    # HOS clocks run on wall-clock time at the driver's location, not the
+    # server's — resolve "now" in the timezone nearest the trip's start.
+    if start_datetime is not None:
+        timezone_name = "UTC"
+    else:
+        start_datetime, timezone_name = local_wall_clock_now(current.lat, current.lon)
 
     leg1_route = get_route(current, pickup)
     leg2_route = get_route(pickup, dropoff)
@@ -58,6 +64,7 @@ def plan_trip(
         segments=segments,
         daily_logs=daily_logs,
         start_datetime=start_datetime,
+        timezone_name=timezone_name,
         current_cycle_used_hours=current_cycle_used_hours,
         inputs={
             "current_location": current_location_text,
@@ -99,6 +106,7 @@ def _build_result_dict(
     segments,
     daily_logs,
     start_datetime: datetime,
+    timezone_name: str,
     current_cycle_used_hours: float,
     inputs: dict,
 ) -> dict:
@@ -153,6 +161,7 @@ def _build_result_dict(
             **inputs,
             "current_cycle_used_hours": current_cycle_used_hours,
             "trip_start": start_datetime.isoformat(),
+            "timezone": timezone_name,
         },
         "waypoints": {
             "current": place_dict(current),

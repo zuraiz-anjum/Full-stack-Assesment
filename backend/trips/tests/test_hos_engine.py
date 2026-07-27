@@ -133,7 +133,7 @@ class CycleRestartTests(TestCase):
         # The first driving chunk should be capped at 0.5h (70 - 69.5) before the restart.
         self.assertEqual(self.segments[0].status, DutyStatus.DRIVING)
         self.assertAlmostEqual(self.segments[0].duration_hours, 0.5)
-        self.assertEqual(self.segments[1].status, DutyStatus.OFF_DUTY)
+        self.assertEqual(self.segments[1].status, DutyStatus.SLEEPER_BERTH)
 
     def test_final_cycle_used_only_counts_post_restart_on_duty_time(self):
         # After the restart: 0.5 (drive) + 1 (pickup) + 1 (drive) + 1 (dropoff) = 3.5h
@@ -194,6 +194,39 @@ class LongHaulPropertyTests(TestCase):
             elif s.status in (DutyStatus.OFF_DUTY, DutyStatus.SLEEPER_BERTH) or "Fuel stop" in s.label:
                 if s.duration_hours >= 0.5 - 1e-9:
                     running_since_break = 0.0
+
+
+class SleeperBerthUsageTests(TestCase):
+    """
+    Multi-hour rest periods (10-hour resets, 34-hour restarts) are logged as
+    sleeper berth time, not off duty — a driver resting in the truck's berth
+    on the road is not "off duty" in the way arriving home would be. Only
+    the short mandatory 30-minute break stays off duty. This guards against
+    the SLEEPER_BERTH status existing in the enum but never actually being
+    produced by the simulation.
+    """
+
+    def test_ten_hour_reset_uses_sleeper_berth(self):
+        legs = [
+            RouteLeg("current -> pickup", distance_miles=0, duration_hours=0),
+            RouteLeg("pickup -> dropoff", distance_miles=700, duration_hours=12.5),
+        ]
+        segments = simulate_trip(legs, current_cycle_used_hours=0, start_datetime=START)
+        resets = [s for s in segments if "10-hour rest period" in s.label]
+        self.assertTrue(resets)
+        for reset in resets:
+            self.assertEqual(reset.status, DutyStatus.SLEEPER_BERTH)
+
+    def test_thirty_minute_break_stays_off_duty(self):
+        legs = [
+            RouteLeg("current -> pickup", distance_miles=10, duration_hours=0.2),
+            RouteLeg("pickup -> dropoff", distance_miles=900, duration_hours=9),
+        ]
+        segments = simulate_trip(legs, current_cycle_used_hours=0, start_datetime=START)
+        breaks = [s for s in segments if "30-minute break" in s.label]
+        self.assertTrue(breaks)
+        for b in breaks:
+            self.assertEqual(b.status, DutyStatus.OFF_DUTY)
 
 
 class DegenerateInputTests(TestCase):

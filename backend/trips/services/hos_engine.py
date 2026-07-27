@@ -154,7 +154,7 @@ def simulate_trip(
 
         if cycle_remaining <= EPSILON:
             _append(
-                DutyStatus.OFF_DUTY,
+                DutyStatus.SLEEPER_BERTH,
                 RESTART_HOURS,
                 "34-hour restart (70-hour/8-day cycle reset)",
                 leg_name=here_leg,
@@ -168,7 +168,7 @@ def simulate_trip(
 
         if window_remaining <= EPSILON or (is_driving and driving_remaining <= EPSILON):
             _append(
-                DutyStatus.OFF_DUTY,
+                DutyStatus.SLEEPER_BERTH,
                 MIN_OFF_DUTY_RESET,
                 "Required 10-hour rest period",
                 leg_name=here_leg,
