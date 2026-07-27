@@ -139,7 +139,7 @@ export default function App() {
                     style={{ transform: "translate(-50%, -55%)" }}
                   >
                     <div style={{ animation: "truck-bob 1.8s ease-in-out infinite" }}>
-                      <Truck className="h-7 w-7" />
+                      <Truck className="h-8 w-8" />
                     </div>
                   </div>
                 </div>

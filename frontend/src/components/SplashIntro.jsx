@@ -52,7 +52,7 @@ export default function SplashIntro() {
           style={{ animation: `truck-drive ${DRIVE_MS}ms ease-in-out forwards` }}
         >
           <div style={{ animation: "truck-bob 0.7s ease-in-out infinite" }}>
-            <Truck className="h-6 w-6" strokeWidth={2.25} />
+            <Truck className="h-7 w-7" strokeWidth={2.25} />
           </div>
         </div>
       </div>
