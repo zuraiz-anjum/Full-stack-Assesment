@@ -1,10 +1,14 @@
 import { MoveHorizontal } from "lucide-react";
+import { useEffect, useRef } from "react";
+
+const REDUCED_MOTION =
+  typeof window !== "undefined" && window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
 
 const ROWS = [
-  { key: "OFF_DUTY", label: "Off Duty", color: "#94a3b8" },
+  { key: "OFF_DUTY", label: "Off Duty", color: "#a8a89c" },
   { key: "SLEEPER_BERTH", label: "Sleeper Berth", color: "#6d5ce8" },
-  { key: "DRIVING", label: "Driving", color: "#16a34a" },
-  { key: "ON_DUTY_NOT_DRIVING", label: "On Duty\n(Not Driving)", color: "#dd8b0a" },
+  { key: "DRIVING", label: "Driving", color: "#1a7a3e" },
+  { key: "ON_DUTY_NOT_DRIVING", label: "On Duty\n(Not Driving)", color: "#b45309" },
 ];
 const ROW_INDEX = Object.fromEntries(ROWS.map((r, i) => [r.key, i]));
 
@@ -75,15 +79,32 @@ function Field({ label, value }) {
 
 export default function DailyLogSheet({ log, meta, vehicleInfo = {} }) {
   const stepPath = buildStepPath(log.blocks);
+  const pathRef = useRef(null);
   const vehicleNumbers = [vehicleInfo.truckNumber, vehicleInfo.trailerNumber]
     .filter(Boolean)
     .join(" / ");
 
+  useEffect(() => {
+    const path = pathRef.current;
+    if (!path || REDUCED_MOTION || typeof path.getTotalLength !== "function") return;
+    const length = path.getTotalLength();
+    if (!length) return;
+    path.style.transition = "none";
+    path.style.strokeDasharray = `${length}`;
+    path.style.strokeDashoffset = `${length}`;
+    path.getBoundingClientRect();
+    path.style.transition = "stroke-dashoffset 1s cubic-bezier(0.65, 0, 0.35, 1)";
+    const raf = requestAnimationFrame(() => {
+      path.style.strokeDashoffset = "0";
+    });
+    return () => cancelAnimationFrame(raf);
+  }, [stepPath]);
+
   return (
-    <div className="rounded-2xl border border-ink-200 bg-white p-5 shadow-sm sm:p-6">
+    <div className="rounded-xl border border-ink-100 bg-white p-5 sm:p-6">
       <div className="mb-4 flex flex-wrap items-baseline justify-between gap-2">
         <div>
-          <h3 className="text-base font-semibold text-ink-900">
+          <h3 className="text-base font-bold tracking-tight text-ink-950">
             Day {log.day_index} &mdash;{" "}
             {new Date(log.date + "T00:00:00").toLocaleDateString(undefined, {
               weekday: "long",
@@ -98,7 +119,7 @@ export default function DailyLogSheet({ log, meta, vehicleInfo = {} }) {
           {ROWS.map((r) => (
             <span key={r.key} className="flex items-center gap-1.5 text-ink-500">
               <span className="inline-block h-2 w-2 rounded-full" style={{ background: r.color }} />
-              {r.label.replace("\n", " ")}: <strong className="text-ink-800">{(log.totals?.[r.key] ?? 0).toFixed(2)}h</strong>
+              {r.label.replace("\n", " ")}: <strong className="text-ink-900">{(log.totals?.[r.key] ?? 0).toFixed(2)}h</strong>
             </span>
           ))}
         </div>
@@ -137,7 +158,7 @@ export default function DailyLogSheet({ log, meta, vehicleInfo = {} }) {
               y={GRID_TOP - 10}
               fontSize="9"
               textAnchor="middle"
-              fill="#4c6087"
+              fill="#6b6b61"
             >
               {hourLabel(h)}
             </text>
@@ -156,7 +177,7 @@ export default function DailyLogSheet({ log, meta, vehicleInfo = {} }) {
                 y1={GRID_TOP}
                 x2={x}
                 y2={GRID_TOP + GRID_HEIGHT}
-                stroke={isSix ? "#334467" : isHour ? "#a3b3cf" : "#e6ecf6"}
+                stroke={isSix ? "#40403a" : isHour ? "#b8b8ac" : "#efeee7"}
                 strokeWidth={isSix ? 1.4 : isHour ? 1 : 0.6}
               />
             );
@@ -170,14 +191,14 @@ export default function DailyLogSheet({ log, meta, vehicleInfo = {} }) {
                 y={GRID_TOP + i * ROW_HEIGHT}
                 width={GRID_WIDTH}
                 height={ROW_HEIGHT}
-                fill={i % 2 === 0 ? "#f9fafc" : "#ffffff"}
+                fill={i % 2 === 0 ? "#faf9f6" : "#ffffff"}
               />
               <line
                 x1={GRID_X}
                 y1={GRID_TOP + i * ROW_HEIGHT}
                 x2={GRID_X + GRID_WIDTH}
                 y2={GRID_TOP + i * ROW_HEIGHT}
-                stroke="#cbd6e8"
+                stroke="#e2e0d8"
                 strokeWidth={1}
               />
               {row.label.split("\n").map((line, li) => (
@@ -188,7 +209,7 @@ export default function DailyLogSheet({ log, meta, vehicleInfo = {} }) {
                   fontSize="11"
                   fontWeight="600"
                   textAnchor="end"
-                  fill="#223051"
+                  fill="#18180f"
                 >
                   {line}
                 </text>
@@ -209,7 +230,7 @@ export default function DailyLogSheet({ log, meta, vehicleInfo = {} }) {
             y1={GRID_TOP + GRID_HEIGHT}
             x2={GRID_X + GRID_WIDTH}
             y2={GRID_TOP + GRID_HEIGHT}
-            stroke="#334467"
+            stroke="#40403a"
             strokeWidth={1.4}
           />
           <line
@@ -217,7 +238,7 @@ export default function DailyLogSheet({ log, meta, vehicleInfo = {} }) {
             y1={GRID_TOP}
             x2={GRID_X}
             y2={GRID_TOP + GRID_HEIGHT}
-            stroke="#334467"
+            stroke="#40403a"
             strokeWidth={1.4}
           />
           <line
@@ -225,7 +246,7 @@ export default function DailyLogSheet({ log, meta, vehicleInfo = {} }) {
             y1={GRID_TOP}
             x2={GRID_X + GRID_WIDTH}
             y2={GRID_TOP + GRID_HEIGHT}
-            stroke="#334467"
+            stroke="#40403a"
             strokeWidth={1.4}
           />
 
@@ -249,7 +270,7 @@ export default function DailyLogSheet({ log, meta, vehicleInfo = {} }) {
           })}
 
           {/* Bold step trace */}
-          <path d={stepPath} fill="none" stroke="#101a2c" strokeWidth={2.25} strokeLinejoin="round" />
+          <path ref={pathRef} d={stepPath} fill="none" stroke="#0a0a08" strokeWidth={2.25} strokeLinejoin="round" />
 
           {/* Remarks track */}
           <line
@@ -257,20 +278,20 @@ export default function DailyLogSheet({ log, meta, vehicleInfo = {} }) {
             y1={REMARKS_TOP}
             x2={GRID_X + GRID_WIDTH}
             y2={REMARKS_TOP}
-            stroke="#cbd6e8"
+            stroke="#e2e0d8"
             strokeWidth={1}
           />
           {(log.remarks ?? []).map((r, i) => {
             const x = xForHour(r.hour);
             return (
               <g key={i}>
-                <line x1={x} y1={GRID_TOP} x2={x} y2={REMARKS_TOP + 4} stroke="#dd8b0a" strokeDasharray="2 2" strokeWidth={1} />
-                <circle cx={x} cy={REMARKS_TOP} r={2.5} fill="#dd8b0a" />
+                <line x1={x} y1={GRID_TOP} x2={x} y2={REMARKS_TOP + 4} stroke="#b45309" strokeDasharray="2 2" strokeWidth={1} />
+                <circle cx={x} cy={REMARKS_TOP} r={2.5} fill="#b45309" />
                 <text
                   x={x + 4}
                   y={REMARKS_TOP + 12}
                   fontSize="9.5"
-                  fill="#334467"
+                  fill="#40403a"
                   transform={`rotate(38 ${x + 4} ${REMARKS_TOP + 12})`}
                 >
                   {formatClock(r.hour)} &middot; {r.location_label || r.activity_label}

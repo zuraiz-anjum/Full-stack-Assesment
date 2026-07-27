@@ -98,14 +98,14 @@ export default function App() {
 
   return (
     <div className="min-h-full bg-ink-50">
-      <header className="print-hide border-b border-ink-200 bg-white">
+      <header className="print-hide border-b border-ink-100 bg-white">
         <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-4 sm:px-6">
           <div className="flex items-center gap-2.5">
-            <div className="rounded-lg bg-ink-900 p-2 text-amber-500">
+            <div className="rounded-lg bg-ink-950 p-2 text-amber-500">
               <Truck className="h-5 w-5" />
             </div>
             <div>
-              <p className="text-sm font-bold tracking-tight text-ink-900">RouteLog</p>
+              <p className="text-sm font-bold tracking-tight text-ink-950">RouteLog</p>
               <p className="text-xs text-ink-500">HOS trip planner &amp; ELD log generator</p>
             </div>
           </div>
@@ -129,9 +129,17 @@ export default function App() {
 
           <section ref={resultsRef} className="min-w-0 space-y-6">
             {!result && (
-              <div className="flex h-full min-h-[420px] flex-col items-center justify-center rounded-2xl border-2 border-dashed border-ink-200 bg-white/50 px-6 text-center">
-                <div className="rounded-full bg-ink-900 p-4 text-amber-500">
-                  <Truck className="h-7 w-7" />
+              <div className="flex h-full min-h-[420px] flex-col items-center justify-center rounded-xl border border-dashed border-ink-200 bg-white/40 px-6 text-center">
+                <div className="relative h-8 w-40">
+                  <svg className="absolute top-1/2 left-0 w-full -translate-y-1/2" height="2" viewBox="0 0 160 2">
+                    <line x1="0" y1="1" x2="160" y2="1" stroke="var(--color-ink-200)" strokeWidth="2" className="road-dashed" />
+                  </svg>
+                  <div
+                    className="absolute top-1/2 left-1/2 -translate-x-1/2 text-ink-950"
+                    style={{ animation: "truck-bob 1.8s ease-in-out infinite", transform: "translate(-50%, -55%)" }}
+                  >
+                    <Truck className="h-7 w-7" />
+                  </div>
                 </div>
                 <h2 className="mt-4 text-lg font-semibold text-ink-800">No trip planned yet</h2>
                 <p className="mt-1.5 max-w-sm text-sm text-ink-500">
@@ -159,7 +167,7 @@ export default function App() {
         </div>
       </main>
 
-      <footer className="print-hide mt-10 border-t border-ink-200 py-6 text-center text-xs text-ink-500">
+      <footer className="print-hide mt-10 border-t border-ink-100 py-6 text-center text-xs text-ink-500">
         Built for the FMCSA property-carrier HOS ruleset (49 CFR Part 395). Assumes no adverse
         driving conditions, a fuel stop every 1,000 miles, and 1 hour each for pickup and
         drop-off.

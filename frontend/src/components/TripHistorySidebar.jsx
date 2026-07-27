@@ -2,8 +2,8 @@ import { ArrowRight, Clock3, History } from "lucide-react";
 
 export default function TripHistorySidebar({ trips, onSelect, activeTripId, loading }) {
   return (
-    <div className="rounded-2xl border border-ink-200 bg-white p-5 shadow-sm">
-      <div className="mb-3 flex items-center gap-2 text-sm font-semibold text-ink-900">
+    <div className="rounded-xl border border-ink-100 bg-white p-5">
+      <div className="mb-3 flex items-center gap-2 text-sm font-semibold text-ink-950">
         <History className="h-4 w-4 text-ink-500" />
         Recent trips
       </div>
@@ -21,7 +21,7 @@ export default function TripHistorySidebar({ trips, onSelect, activeTripId, load
               onClick={() => onSelect(trip.id)}
               className={`group flex w-full items-center justify-between gap-2 rounded-lg px-3 py-2.5 text-left text-sm transition ${
                 trip.id === activeTripId
-                  ? "bg-ink-900 text-white"
+                  ? "bg-ink-950 text-white"
                   : "text-ink-700 hover:bg-ink-50"
               }`}
             >

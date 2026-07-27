@@ -1,7 +1,39 @@
 import L from "leaflet";
-import { useMemo } from "react";
+import { useEffect, useMemo, useRef } from "react";
 import { MapContainer, Marker, Polyline, Popup, TileLayer, useMap } from "react-leaflet";
 import { formatWallClock } from "../lib/datetime";
+
+const REDUCED_MOTION =
+  typeof window !== "undefined" && window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
+
+// Draws the route polyline in by animating stroke-dashoffset on the
+// underlying SVG path, rather than just having it pop in fully formed --
+// same trick used for hand-drawn-map effects, no animation library needed.
+function AnimatedRoute({ geometry }) {
+  const ref = useRef(null);
+
+  useEffect(() => {
+    const layer = ref.current;
+    const path = layer?.getElement?.() ?? layer?._path;
+    if (!path || REDUCED_MOTION || typeof path.getTotalLength !== "function") return;
+
+    const length = path.getTotalLength();
+    path.style.transition = "none";
+    path.style.strokeDasharray = `${length}`;
+    path.style.strokeDashoffset = `${length}`;
+    // Force a reflow so the browser registers the starting state before
+    // the transition below kicks in -- otherwise it just snaps to the end.
+    // eslint-disable-next-line no-unused-expressions
+    path.getBoundingClientRect();
+    path.style.transition = "stroke-dashoffset 1.3s cubic-bezier(0.65, 0, 0.35, 1)";
+    const raf = requestAnimationFrame(() => {
+      path.style.strokeDashoffset = "0";
+    });
+    return () => cancelAnimationFrame(raf);
+  }, [geometry]);
+
+  return <Polyline ref={ref} positions={geometry} pathOptions={{ color: "#18180f", weight: 4, opacity: 0.9 }} />;
+}
 
 const STATUS_COLORS = {
   OFF_DUTY: "#94a3b8",
@@ -56,18 +88,16 @@ export default function MapView({ waypoints, geometry, stops }) {
   const center = geometry?.[0] || [39.5, -98.35];
 
   return (
-    <div className="h-full w-full overflow-hidden rounded-2xl border border-ink-200 shadow-sm">
+    <div className="h-full w-full overflow-hidden rounded-xl border border-ink-100">
       <MapContainer center={center} zoom={6} scrollWheelZoom className="h-full w-full">
         <TileLayer
           attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
           url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
         />
-        {geometry && geometry.length > 1 && (
-          <Polyline positions={geometry} pathOptions={{ color: "#101a2c", weight: 4, opacity: 0.85 }} />
-        )}
+        {geometry && geometry.length > 1 && <AnimatedRoute geometry={geometry} />}
 
         {waypoints?.current && (
-          <Marker position={[waypoints.current.lat, waypoints.current.lon]} icon={pinIcon("#334467", "C")}>
+          <Marker position={[waypoints.current.lat, waypoints.current.lon]} icon={pinIcon("#40403a", "C")}>
             <Popup>
               <strong>Current location</strong>
               <br />

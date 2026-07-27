@@ -13,8 +13,8 @@ const MapView = lazy(() => import("./MapView"));
 
 function MapSkeleton() {
   return (
-    <div className="flex h-full w-full items-center justify-center rounded-2xl border border-ink-200 bg-ink-100">
-      <div className="h-6 w-6 animate-spin rounded-full border-2 border-ink-300 border-t-ink-600" />
+    <div className="flex h-full w-full items-center justify-center rounded-xl border border-ink-100 bg-ink-50">
+      <div className="h-6 w-6 animate-spin rounded-full border-2 border-ink-200 border-t-ink-700" />
     </div>
   );
 }
@@ -74,7 +74,7 @@ export default function TripResults({ result, vehicleInfo, tripId, shareToken })
       </div>
       <div className="space-y-5">
         <div className="flex items-center justify-between">
-          <h2 className="text-base font-semibold text-ink-900">
+          <h2 className="text-lg font-bold tracking-tight text-ink-950">
             Daily log sheets ({result.daily_logs.length})
           </h2>
           <div className="print-hide flex items-center gap-2">
@@ -82,7 +82,7 @@ export default function TripResults({ result, vehicleInfo, tripId, shareToken })
               <button
                 type="button"
                 onClick={handleShare}
-                className="flex items-center gap-1.5 rounded-lg border border-ink-200 bg-white px-3 py-1.5 text-xs font-medium text-ink-600 shadow-sm transition hover:bg-ink-50"
+                className="flex items-center gap-1.5 rounded-lg border border-ink-100 bg-white px-3 py-1.5 text-xs font-medium text-ink-600 transition hover:border-ink-200 hover:bg-ink-50"
               >
                 {copied ? (
                   <Check className="h-3.5 w-3.5 text-green-600" />
@@ -97,7 +97,7 @@ export default function TripResults({ result, vehicleInfo, tripId, shareToken })
                 type="button"
                 onClick={handleDownloadPdf}
                 disabled={downloading}
-                className="flex items-center gap-1.5 rounded-lg border border-ink-200 bg-white px-3 py-1.5 text-xs font-medium text-ink-600 shadow-sm transition hover:bg-ink-50 disabled:cursor-not-allowed disabled:opacity-60"
+                className="flex items-center gap-1.5 rounded-lg border border-ink-100 bg-white px-3 py-1.5 text-xs font-medium text-ink-600 transition hover:border-ink-200 hover:bg-ink-50 disabled:cursor-not-allowed disabled:opacity-60"
               >
                 {downloading ? (
                   <Loader2 className="h-3.5 w-3.5 animate-spin" />
@@ -110,7 +110,7 @@ export default function TripResults({ result, vehicleInfo, tripId, shareToken })
             <button
               type="button"
               onClick={() => window.print()}
-              className="flex items-center gap-1.5 rounded-lg border border-ink-200 bg-white px-3 py-1.5 text-xs font-medium text-ink-600 shadow-sm transition hover:bg-ink-50"
+              className="flex items-center gap-1.5 rounded-lg border border-ink-100 bg-white px-3 py-1.5 text-xs font-medium text-ink-600 transition hover:border-ink-200 hover:bg-ink-50"
             >
               <Printer className="h-3.5 w-3.5" />
               Print

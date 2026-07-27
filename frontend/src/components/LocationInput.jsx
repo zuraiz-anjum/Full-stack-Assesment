@@ -85,7 +85,7 @@ export default function LocationInput({ id, label, placeholder, value, onChange,
           onBlur={() => setOpen(false)}
           placeholder={placeholder}
           required
-          className="w-full rounded-lg border border-ink-200 bg-white py-2.5 pr-3 pl-9 text-sm text-ink-900 shadow-sm outline-none transition focus:border-amber-500 focus:ring-2 focus:ring-amber-500/20"
+          className="w-full rounded-lg border border-ink-200 bg-white py-2.5 pr-3 pl-9 text-sm text-ink-900 outline-none transition focus:border-amber-500 focus:ring-2 focus:ring-amber-500/20"
         />
       </div>
       {open && suggestions.length > 0 && (
@@ -97,7 +97,7 @@ export default function LocationInput({ id, label, placeholder, value, onChange,
                 onMouseDown={(e) => e.preventDefault()}
                 onClick={() => selectSuggestion(s)}
                 className={`flex w-full items-start gap-2 px-3 py-2 text-left text-sm ${
-                  idx === activeIndex ? "bg-amber-50 text-ink-900" : "text-ink-700 hover:bg-ink-50"
+                  idx === activeIndex ? "bg-amber-500/10 text-ink-900" : "text-ink-700 hover:bg-ink-50"
                 }`}
               >
                 <MapPin className="mt-0.5 h-3.5 w-3.5 shrink-0 text-ink-500" />

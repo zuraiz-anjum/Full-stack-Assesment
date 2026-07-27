@@ -3,6 +3,7 @@ import { createRoot } from 'react-dom/client'
 import App from './App.jsx'
 import ErrorBoundary from './components/ErrorBoundary.jsx'
 import SharedTripPage from './components/SharedTripPage.jsx'
+import SplashIntro from './components/SplashIntro.jsx'
 import './index.css'
 
 // No client-side router for one extra screen -- a shared trip link is just
@@ -32,6 +33,7 @@ function rootFallback() {
 createRoot(document.getElementById('root')).render(
   <StrictMode>
     <ErrorBoundary fallback={rootFallback}>
+      <SplashIntro />
       {sharedMatch ? <SharedTripPage shareToken={sharedMatch[1]} /> : <App />}
     </ErrorBoundary>
   </StrictMode>,

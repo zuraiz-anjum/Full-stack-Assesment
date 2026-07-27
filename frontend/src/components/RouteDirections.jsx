@@ -11,13 +11,13 @@ export default function RouteDirections({ legs }) {
   if (totalSteps === 0) return null;
 
   return (
-    <div className="rounded-2xl border border-ink-200 bg-white shadow-sm">
+    <div className="rounded-xl border border-ink-100 bg-white">
       <button
         type="button"
         onClick={() => setOpen((v) => !v)}
         className="flex w-full items-center justify-between px-5 py-4 text-left"
       >
-        <span className="flex items-center gap-2 text-sm font-semibold text-ink-900">
+        <span className="flex items-center gap-2 text-sm font-semibold text-ink-950">
           <Milestone className="h-4 w-4 text-ink-500" />
           Turn-by-turn directions ({totalSteps} steps)
         </span>
