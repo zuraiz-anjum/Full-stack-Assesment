@@ -32,7 +32,7 @@ function hourLabel(h) {
   return String(h);
 }
 
-function formatClock(hourFloat) {
+export function formatClock(hourFloat) {
   let h = Math.floor(hourFloat) % 24;
   let m = Math.round((hourFloat - Math.floor(hourFloat)) * 60);
   if (m === 60) {
