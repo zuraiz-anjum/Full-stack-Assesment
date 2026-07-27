@@ -88,7 +88,7 @@ export default function App() {
             />
           </aside>
 
-          <section className="space-y-6">
+          <section className="min-w-0 space-y-6">
             {!result && (
               <div className="flex h-full min-h-[420px] flex-col items-center justify-center rounded-2xl border-2 border-dashed border-ink-200 bg-white/50 px-6 text-center">
                 <div className="rounded-full bg-ink-900 p-4 text-amber-500">
