@@ -78,8 +78,9 @@ class DutySegment:
     label: str
     leg_name: str | None = None
     miles: float = 0.0
-    # Fraction (0..1) of `leg_name`'s total distance covered *by the end*
-    # of this segment. Used later to interpolate a real-world location.
+    # Fraction (0..1) of `leg_name`'s total distance covered at the START
+    # of this segment — i.e. where the truck was when this duty status
+    # began. Used later to resolve a real-world location for remarks/maps.
     leg_progress_fraction: float | None = None
     # Populated by trip_planner after the fact: {"lat":.., "lon":.., "label":..}
     resolved_location: dict | None = None
@@ -254,9 +255,13 @@ def simulate_trip(
                 resolve_blocking_constraint(is_driving=True, speed_mph=speed)
                 continue
 
+            # Tag this segment with where it STARTS (for remarks — "location
+            # at the time of the status change"), then advance to where it
+            # ENDS so subsequent stops resolve to the truck's new position.
+            fraction_start = miles_covered / leg.distance_miles if leg.distance_miles > 0 else 0.0
             chunk_miles = chunk * speed
             miles_covered += chunk_miles
-            fraction = miles_covered / leg.distance_miles if leg.distance_miles > 0 else 1.0
+            fraction_end = miles_covered / leg.distance_miles if leg.distance_miles > 0 else 1.0
 
             _append(
                 DutyStatus.DRIVING,
@@ -264,13 +269,13 @@ def simulate_trip(
                 f"Driving — {leg.name}",
                 leg_name=leg.name,
                 miles=chunk_miles,
-                leg_progress_fraction=min(fraction, 1.0),
+                leg_progress_fraction=min(fraction_start, 1.0),
             )
             state.driving_in_window += chunk
             state.driving_since_break += chunk
             state.distance_since_fuel += chunk_miles
             state.last_leg_name = leg.name
-            state.last_fraction = min(fraction, 1.0)
+            state.last_fraction = min(fraction_end, 1.0)
             remaining_hours -= chunk
 
     def stationary_stop(hours: float, label: str, leg_name: str) -> None:

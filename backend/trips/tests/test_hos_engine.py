@@ -39,6 +39,19 @@ class ShortTripNoBreaksTests(TestCase):
         self.assertAlmostEqual(self.segments[2].duration_hours, 3)
         self.assertAlmostEqual(self.segments[3].duration_hours, 1)
 
+    def test_driving_segments_are_tagged_with_their_start_position_not_end(self):
+        # The first driving segment covers the whole first leg (0 -> 100mi),
+        # so it should be tagged at fraction 0.0 (where it started), not 1.0
+        # (where it ended) — otherwise remarks would show the destination
+        # instead of the place the driver actually departed from.
+        first_drive = self.segments[0]
+        self.assertEqual(first_drive.status, DutyStatus.DRIVING)
+        self.assertAlmostEqual(first_drive.leg_progress_fraction, 0.0)
+
+        second_drive = self.segments[2]
+        self.assertEqual(second_drive.status, DutyStatus.DRIVING)
+        self.assertAlmostEqual(second_drive.leg_progress_fraction, 0.0)
+
     def test_contiguous_timeline(self):
         for prev, nxt in zip(self.segments, self.segments[1:]):
             self.assertEqual(prev.end, nxt.start)
