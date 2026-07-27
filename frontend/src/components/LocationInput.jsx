@@ -72,7 +72,7 @@ export default function LocationInput({ id, label, placeholder, value, onChange,
         {label}
       </label>
       <div className="relative">
-        <Icon className="pointer-events-none absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-ink-400" />
+        <Icon className="pointer-events-none absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-ink-500" />
         <input
           id={id}
           ref={inputRef}
@@ -100,7 +100,7 @@ export default function LocationInput({ id, label, placeholder, value, onChange,
                   idx === activeIndex ? "bg-amber-50 text-ink-900" : "text-ink-700 hover:bg-ink-50"
                 }`}
               >
-                <MapPin className="mt-0.5 h-3.5 w-3.5 shrink-0 text-ink-400" />
+                <MapPin className="mt-0.5 h-3.5 w-3.5 shrink-0 text-ink-500" />
                 <span className="min-w-0">{s.label}</span>
               </button>
             </li>

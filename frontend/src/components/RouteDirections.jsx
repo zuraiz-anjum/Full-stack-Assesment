@@ -18,17 +18,17 @@ export default function RouteDirections({ legs }) {
         className="flex w-full items-center justify-between px-5 py-4 text-left"
       >
         <span className="flex items-center gap-2 text-sm font-semibold text-ink-900">
-          <Milestone className="h-4 w-4 text-ink-400" />
+          <Milestone className="h-4 w-4 text-ink-500" />
           Turn-by-turn directions ({totalSteps} steps)
         </span>
-        <ChevronDown className={`h-4 w-4 text-ink-400 transition-transform ${open ? "rotate-180" : ""}`} />
+        <ChevronDown className={`h-4 w-4 text-ink-500 transition-transform ${open ? "rotate-180" : ""}`} />
       </button>
 
       {open && (
         <div className="max-h-96 overflow-y-auto border-t border-ink-100 px-5 pb-4">
           {legs.map((leg, legIdx) => (
             <div key={leg.name}>
-              <p className="mt-4 mb-2 flex items-center gap-1.5 text-xs font-semibold tracking-wide text-ink-400 uppercase">
+              <p className="mt-4 mb-2 flex items-center gap-1.5 text-xs font-semibold tracking-wide text-ink-500 uppercase">
                 <MapPin className="h-3 w-3" />
                 {legIdx === 0 ? "Current → Pickup" : "Pickup → Drop-off"}
               </p>
@@ -39,7 +39,7 @@ export default function RouteDirections({ legs }) {
                       {i + 1}
                     </span>
                     <span className="flex-1 text-ink-700">{step.instruction}</span>
-                    <span className="shrink-0 text-xs text-ink-400">
+                    <span className="shrink-0 text-xs text-ink-500">
                       {step.distance_miles >= 0.1 ? `${step.distance_miles.toFixed(1)} mi` : ""}
                     </span>
                   </li>

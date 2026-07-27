@@ -107,7 +107,7 @@ export default function SharedTripPage({ shareToken }) {
             </div>
             <div>
               <p className="text-sm font-bold tracking-tight text-ink-900">RouteLog</p>
-              <p className="text-xs text-ink-400">Shared trip (read-only)</p>
+              <p className="text-xs text-ink-500">Shared trip (read-only)</p>
             </div>
           </div>
           <a href="/" className="text-xs font-medium text-ink-500 hover:text-ink-800">
@@ -119,13 +119,13 @@ export default function SharedTripPage({ shareToken }) {
       <main className="mx-auto max-w-5xl px-4 py-6 sm:px-6 sm:py-8">
         {loading && (
           <div className="flex min-h-[300px] items-center justify-center">
-            <Loader2 className="h-6 w-6 animate-spin text-ink-400" />
+            <Loader2 className="h-6 w-6 animate-spin text-ink-500" />
           </div>
         )}
 
         {!loading && error && (
           <div className="flex flex-col items-center justify-center gap-3 rounded-2xl border-2 border-dashed border-ink-200 bg-white px-6 py-16 text-center">
-            <AlertTriangle className="h-8 w-8 text-ink-400" />
+            <AlertTriangle className="h-8 w-8 text-ink-500" />
             <h2 className="text-lg font-semibold text-ink-800">Link not found</h2>
             <p className="max-w-sm text-sm text-ink-500">
               This share link doesn't point to a trip that exists — it may have been mistyped, or

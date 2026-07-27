@@ -4,13 +4,13 @@ export default function TripHistorySidebar({ trips, onSelect, activeTripId, load
   return (
     <div className="rounded-2xl border border-ink-200 bg-white p-5 shadow-sm">
       <div className="mb-3 flex items-center gap-2 text-sm font-semibold text-ink-900">
-        <History className="h-4 w-4 text-ink-400" />
+        <History className="h-4 w-4 text-ink-500" />
         Recent trips
       </div>
 
-      {loading && <p className="text-sm text-ink-400">Loading…</p>}
+      {loading && <p className="text-sm text-ink-500">Loading…</p>}
       {!loading && trips.length === 0 && (
-        <p className="text-sm text-ink-400">Your planned trips will show up here.</p>
+        <p className="text-sm text-ink-500">Your planned trips will show up here.</p>
       )}
 
       <ul className="max-h-72 space-y-1.5 overflow-y-auto pr-1">
@@ -31,7 +31,7 @@ export default function TripHistorySidebar({ trips, onSelect, activeTripId, load
                 </p>
                 <p
                   className={`mt-0.5 flex items-center gap-1 text-xs ${
-                    trip.id === activeTripId ? "text-ink-300" : "text-ink-400"
+                    trip.id === activeTripId ? "text-ink-300" : "text-ink-500"
                   }`}
                 >
                   <Clock3 className="h-3 w-3" />

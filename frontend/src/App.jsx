@@ -106,10 +106,10 @@ export default function App() {
             </div>
             <div>
               <p className="text-sm font-bold tracking-tight text-ink-900">RouteLog</p>
-              <p className="text-xs text-ink-400">HOS trip planner &amp; ELD log generator</p>
+              <p className="text-xs text-ink-500">HOS trip planner &amp; ELD log generator</p>
             </div>
           </div>
-          <p className="hidden text-xs text-ink-400 sm:block">
+          <p className="hidden text-xs text-ink-500 sm:block">
             Property carrier · 70&nbsp;hrs/8&nbsp;days · No adverse conditions
           </p>
         </div>
@@ -134,7 +134,7 @@ export default function App() {
                   <Truck className="h-7 w-7" />
                 </div>
                 <h2 className="mt-4 text-lg font-semibold text-ink-800">No trip planned yet</h2>
-                <p className="mt-1.5 max-w-sm text-sm text-ink-400">
+                <p className="mt-1.5 max-w-sm text-sm text-ink-500">
                   Fill in the form to generate a route, stop schedule, and a full set of
                   FMCSA-style daily log sheets for your trip.
                 </p>
@@ -159,7 +159,7 @@ export default function App() {
         </div>
       </main>
 
-      <footer className="print-hide mt-10 border-t border-ink-200 py-6 text-center text-xs text-ink-400">
+      <footer className="print-hide mt-10 border-t border-ink-200 py-6 text-center text-xs text-ink-500">
         Built for the FMCSA property-carrier HOS ruleset (49 CFR Part 395). Assumes no adverse
         driving conditions, a fuel stop every 1,000 miles, and 1 hour each for pickup and
         drop-off.

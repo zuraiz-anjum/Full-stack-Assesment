@@ -7,9 +7,9 @@ function Card({ icon: Icon, label, value, sub }) {
         <Icon className="h-4 w-4" />
       </div>
       <div className="min-w-0">
-        <p className="truncate text-xs font-medium text-ink-400">{label}</p>
+        <p className="truncate text-xs font-medium text-ink-500">{label}</p>
         <p className="text-lg leading-tight font-semibold break-words text-ink-900">{value}</p>
-        {sub && <p className="truncate text-xs text-ink-400">{sub}</p>}
+        {sub && <p className="truncate text-xs text-ink-500">{sub}</p>}
       </div>
     </div>
   );

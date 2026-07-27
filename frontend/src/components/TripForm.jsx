@@ -124,9 +124,9 @@ export default function TripForm({ onSubmit, submitting, errorMessage }) {
               required
               className="w-20 rounded-lg border border-ink-200 bg-white px-2.5 py-2 text-center text-sm outline-none focus:border-amber-500 focus:ring-2 focus:ring-amber-500/20"
             />
-            <span className="text-sm text-ink-400">/ 70 hrs</span>
+            <span className="text-sm text-ink-500">/ 70 hrs</span>
           </div>
-          <p className="mt-1.5 text-xs text-ink-400">
+          <p className="mt-1.5 text-xs text-ink-500">
             Hours already on duty in the current 70-hour/8-day cycle, per your ELD.
           </p>
         </div>
@@ -163,7 +163,7 @@ export default function TripForm({ onSubmit, submitting, errorMessage }) {
               />
             </div>
           ))}
-          <p className="text-xs text-ink-400 sm:col-span-2">
+          <p className="text-xs text-ink-500 sm:col-span-2">
             These fill in the carrier/vehicle fields on the printed daily log sheets. Leave blank
             and they'll just show as empty on the form, same as a driver who fills it in later.
           </p>

@@ -65,7 +65,7 @@ function buildStepPath(blocks) {
 function Field({ label, value }) {
   return (
     <div className="min-w-0">
-      <p className="text-[10px] tracking-wide text-ink-400 uppercase">{label}</p>
+      <p className="text-[10px] tracking-wide text-ink-500 uppercase">{label}</p>
       <p className="truncate border-b border-ink-200 pb-1 text-sm text-ink-800">
         {value || <span className="text-ink-300">&mdash;</span>}
       </p>
@@ -92,7 +92,7 @@ export default function DailyLogSheet({ log, meta, vehicleInfo = {} }) {
               year: "numeric",
             })}
           </h3>
-          {meta && <p className="text-xs text-ink-400">{meta}</p>}
+          {meta && <p className="text-xs text-ink-500">{meta}</p>}
         </div>
         <div className="flex flex-wrap gap-3 text-xs">
           {ROWS.map((r) => (
@@ -118,7 +118,7 @@ export default function DailyLogSheet({ log, meta, vehicleInfo = {} }) {
         <Field label="Driver signature" value={vehicleInfo.driverName ? "(certified above)" : ""} />
       </div>
 
-      <p className="mb-1.5 flex items-center gap-1 text-xs text-ink-400 sm:hidden print:hidden">
+      <p className="mb-1.5 flex items-center gap-1 text-xs text-ink-500 sm:hidden print:hidden">
         <MoveHorizontal className="h-3.5 w-3.5" />
         Swipe to see the full 24-hour grid
       </p>
@@ -137,7 +137,7 @@ export default function DailyLogSheet({ log, meta, vehicleInfo = {} }) {
               y={GRID_TOP - 10}
               fontSize="9"
               textAnchor="middle"
-              fill="#7186ab"
+              fill="#4c6087"
             >
               {hourLabel(h)}
             </text>
