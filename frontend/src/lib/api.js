@@ -4,12 +4,31 @@ const BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://127.0.0.1:8000/api
 
 const client = axios.create({ baseURL: BASE_URL, timeout: 30000 });
 
-export async function planTrip({ currentLocation, pickupLocation, dropoffLocation, currentCycleUsedHours }) {
+export async function planTrip({
+  currentLocation,
+  pickupLocation,
+  dropoffLocation,
+  currentCycleUsedHours,
+  carrierName,
+  mainOfficeAddress,
+  truckNumber,
+  trailerNumber,
+  driverName,
+  coDriverName,
+  shippingDocNumber,
+}) {
   const { data } = await client.post("/trips/", {
     current_location: currentLocation,
     pickup_location: pickupLocation,
     dropoff_location: dropoffLocation,
     current_cycle_used_hours: currentCycleUsedHours,
+    carrier_name: carrierName,
+    main_office_address: mainOfficeAddress,
+    truck_number: truckNumber,
+    trailer_number: trailerNumber,
+    driver_name: driverName,
+    co_driver_name: coDriverName,
+    shipping_doc_number: shippingDocNumber,
   });
   return data;
 }

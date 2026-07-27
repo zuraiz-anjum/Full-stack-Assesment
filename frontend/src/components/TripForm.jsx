@@ -1,4 +1,4 @@
-import { Flag, Loader2, MapPin, Navigation, Send } from "lucide-react";
+import { ChevronDown, Flag, Loader2, MapPin, Navigation, Send, Truck } from "lucide-react";
 import { useState } from "react";
 import LocationInput from "./LocationInput";
 
@@ -7,10 +7,32 @@ const DEFAULTS = {
   pickupLocation: "",
   dropoffLocation: "",
   currentCycleUsedHours: "",
+  carrierName: "",
+  mainOfficeAddress: "",
+  truckNumber: "",
+  trailerNumber: "",
+  driverName: "",
+  coDriverName: "",
+  shippingDocNumber: "",
 };
+
+const VEHICLE_FIELDS = [
+  { key: "driverName", label: "Driver name", placeholder: "e.g. John Doe" },
+  { key: "coDriverName", label: "Co-driver name", placeholder: "Optional" },
+  { key: "carrierName", label: "Carrier name", placeholder: "e.g. Acme Freight LLC" },
+  { key: "mainOfficeAddress", label: "Main office address", placeholder: "City, State" },
+  { key: "truckNumber", label: "Truck/tractor number", placeholder: "e.g. T-4471" },
+  { key: "trailerNumber", label: "Trailer number", placeholder: "e.g. TR-2209" },
+  {
+    key: "shippingDocNumber",
+    label: "Shipping doc # / shipper & commodity",
+    placeholder: "e.g. PRO 101601, Dry goods",
+  },
+];
 
 export default function TripForm({ onSubmit, submitting, errorMessage }) {
   const [form, setForm] = useState(DEFAULTS);
+  const [detailsOpen, setDetailsOpen] = useState(false);
 
   function update(field, value) {
     setForm((prev) => ({ ...prev, [field]: value }));
@@ -23,6 +45,13 @@ export default function TripForm({ onSubmit, submitting, errorMessage }) {
       pickupLocation: form.pickupLocation,
       dropoffLocation: form.dropoffLocation,
       currentCycleUsedHours: Number(form.currentCycleUsedHours),
+      carrierName: form.carrierName,
+      mainOfficeAddress: form.mainOfficeAddress,
+      truckNumber: form.truckNumber,
+      trailerNumber: form.trailerNumber,
+      driverName: form.driverName,
+      coDriverName: form.coDriverName,
+      shippingDocNumber: form.shippingDocNumber,
     });
   }
 
@@ -102,6 +131,44 @@ export default function TripForm({ onSubmit, submitting, errorMessage }) {
           </p>
         </div>
       </div>
+
+      <button
+        type="button"
+        onClick={() => setDetailsOpen((v) => !v)}
+        className="mt-5 flex w-full items-center justify-between rounded-lg border border-ink-200 bg-ink-50 px-3 py-2.5 text-sm font-medium text-ink-600 transition hover:bg-ink-100"
+      >
+        <span className="flex items-center gap-2">
+          <Truck className="h-4 w-4" />
+          Carrier &amp; vehicle details (optional)
+        </span>
+        <ChevronDown
+          className={`h-4 w-4 transition-transform ${detailsOpen ? "rotate-180" : ""}`}
+        />
+      </button>
+
+      {detailsOpen && (
+        <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2">
+          {VEHICLE_FIELDS.map((f) => (
+            <div key={f.key} className={f.key === "shippingDocNumber" ? "sm:col-span-2" : ""}>
+              <label htmlFor={f.key} className="mb-1.5 block text-sm font-medium text-ink-700">
+                {f.label}
+              </label>
+              <input
+                id={f.key}
+                type="text"
+                value={form[f.key]}
+                onChange={(e) => update(f.key, e.target.value)}
+                placeholder={f.placeholder}
+                className="w-full rounded-lg border border-ink-200 bg-white px-3 py-2.5 text-sm text-ink-900 shadow-sm outline-none transition focus:border-amber-500 focus:ring-2 focus:ring-amber-500/20"
+              />
+            </div>
+          ))}
+          <p className="text-xs text-ink-400 sm:col-span-2">
+            These fill in the carrier/vehicle fields on the printed daily log sheets. Leave blank
+            and they'll just show as empty on the form, same as a driver who fills it in later.
+          </p>
+        </div>
+      )}
 
       {errorMessage && (
         <div className="mt-5 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">

@@ -5,8 +5,10 @@ from trips.services.hos_engine import DutySegment, DutyStatus
 from trips.services.log_builder import build_daily_logs
 
 
-def _seg(status, start, end, label="", location=None):
-    return DutySegment(status=status, start=start, end=end, label=label, resolved_location=location)
+def _seg(status, start, end, label="", location=None, miles=0.0):
+    return DutySegment(
+        status=status, start=start, end=end, label=label, resolved_location=location, miles=miles
+    )
 
 
 class DailyLogSplittingTests(TestCase):
@@ -76,3 +78,25 @@ class DailyLogSplittingTests(TestCase):
 
     def test_empty_segments_returns_empty_logs(self):
         self.assertEqual(build_daily_logs([]), [])
+
+
+class PerDayMileageTests(TestCase):
+    def test_mileage_is_prorated_across_a_midnight_crossing_drive(self):
+        d1, d2 = datetime(2026, 1, 5), datetime(2026, 1, 6)
+        # 8-hour, 400-mile drive from 22:00 to 06:00 -- 2h/100mi on day 1,
+        # 6h/300mi on day 2.
+        segments = [
+            _seg(DutyStatus.DRIVING, d1.replace(hour=22), d2.replace(hour=6), "Driving", miles=400.0),
+        ]
+        logs = build_daily_logs(segments)
+        self.assertEqual(len(logs), 2)
+        self.assertAlmostEqual(logs[0].total_miles, 100.0, places=1)
+        self.assertAlmostEqual(logs[1].total_miles, 300.0, places=1)
+
+    def test_non_driving_segments_dont_add_mileage(self):
+        d1 = datetime(2026, 1, 5)
+        segments = [
+            _seg(DutyStatus.ON_DUTY_NOT_DRIVING, d1.replace(hour=6), d1.replace(hour=7), "Pickup"),
+        ]
+        logs = build_daily_logs(segments)
+        self.assertAlmostEqual(logs[0].total_miles, 0.0)

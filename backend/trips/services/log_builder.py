@@ -40,6 +40,7 @@ class DailyLog:
     blocks: list[LogBlock] = field(default_factory=list)
     totals: dict = field(default_factory=dict)
     remarks: list[Remark] = field(default_factory=list)
+    total_miles: float = 0.0
 
 
 def _hours_between(a: datetime, b: datetime) -> float:
@@ -65,6 +66,7 @@ def build_daily_logs(segments: list[DutySegment]) -> list[DailyLog]:
         blocks: list[LogBlock] = []
         remarks: list[Remark] = []
         totals = {s: 0.0 for s in ALL_STATUSES}
+        total_miles = 0.0
         cursor = day_start
 
         overlapping = [s for s in segments if s.start < day_end and s.end > day_start]
@@ -89,6 +91,10 @@ def build_daily_logs(segments: list[DutySegment]) -> list[DailyLog]:
             end_hour = _hours_between(day_start, clip_end)
             blocks.append(LogBlock(seg.status, start_hour, end_hour))
             totals[seg.status] += end_hour - start_hour
+
+            if seg.status == DutyStatus.DRIVING and seg.duration_hours > 0:
+                clipped_fraction = (end_hour - start_hour) / seg.duration_hours
+                total_miles += seg.miles * clipped_fraction
 
             if clip_start == seg.start:
                 location = getattr(seg, "resolved_location", None)
@@ -115,6 +121,7 @@ def build_daily_logs(segments: list[DutySegment]) -> list[DailyLog]:
                 blocks=blocks,
                 totals=totals,
                 remarks=remarks,
+                total_miles=round(total_miles, 1),
             )
         )
 

@@ -20,13 +20,26 @@ LEG_CURRENT_TO_PICKUP = "current -> pickup"
 LEG_PICKUP_TO_DROPOFF = "pickup -> dropoff"
 
 
+DEFAULT_VEHICLE_INFO = {
+    "carrier_name": "",
+    "main_office_address": "",
+    "truck_number": "",
+    "trailer_number": "",
+    "driver_name": "",
+    "co_driver_name": "",
+    "shipping_doc_number": "",
+}
+
+
 def plan_trip(
     current_location_text: str,
     pickup_location_text: str,
     dropoff_location_text: str,
     current_cycle_used_hours: float,
     start_datetime: datetime | None = None,
+    vehicle_info: dict | None = None,
 ) -> dict:
+    vehicle_info = {**DEFAULT_VEHICLE_INFO, **(vehicle_info or {})}
     current = geocode(current_location_text)
     pickup = geocode(pickup_location_text)
     dropoff = geocode(dropoff_location_text)
@@ -66,6 +79,7 @@ def plan_trip(
         start_datetime=start_datetime,
         timezone_name=timezone_name,
         current_cycle_used_hours=current_cycle_used_hours,
+        vehicle_info=vehicle_info,
         inputs={
             "current_location": current_location_text,
             "pickup_location": pickup_location_text,
@@ -108,6 +122,7 @@ def _build_result_dict(
     start_datetime: datetime,
     timezone_name: str,
     current_cycle_used_hours: float,
+    vehicle_info: dict,
     inputs: dict,
 ) -> dict:
     def place_dict(p: GeocodedPlace) -> dict:
@@ -163,6 +178,7 @@ def _build_result_dict(
             "trip_start": start_datetime.isoformat(),
             "timezone": timezone_name,
         },
+        "vehicle_info": vehicle_info,
         "waypoints": {
             "current": place_dict(current),
             "pickup": place_dict(pickup),
@@ -188,6 +204,7 @@ def _build_result_dict(
             {
                 "date": log.date,
                 "day_index": log.day_index,
+                "total_miles": log.total_miles,
                 "totals": {status.value: hours for status, hours in log.totals.items()},
                 "blocks": [
                     {

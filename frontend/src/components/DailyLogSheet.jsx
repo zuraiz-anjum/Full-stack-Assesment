@@ -33,8 +33,14 @@ function hourLabel(h) {
 }
 
 function formatClock(hourFloat) {
-  const h = Math.floor(hourFloat) % 24;
-  const m = Math.round((hourFloat - Math.floor(hourFloat)) * 60);
+  let h = Math.floor(hourFloat) % 24;
+  let m = Math.round((hourFloat - Math.floor(hourFloat)) * 60);
+  if (m === 60) {
+    // Rounding a fractional hour (e.g. 11.9999996) can land exactly on the
+    // next minute mark — roll it over instead of printing "11:60".
+    m = 0;
+    h = (h + 1) % 24;
+  }
   const period = h < 12 ? "AM" : "PM";
   const h12 = h % 12 === 0 ? 12 : h % 12;
   return `${h12}:${String(m).padStart(2, "0")} ${period}`;
@@ -54,8 +60,22 @@ function buildStepPath(blocks) {
   return "M " + points.map(([x, y]) => `${x.toFixed(1)},${y.toFixed(1)}`).join(" L ");
 }
 
-export default function DailyLogSheet({ log, meta }) {
+function Field({ label, value }) {
+  return (
+    <div className="min-w-0">
+      <p className="text-[10px] tracking-wide text-ink-400 uppercase">{label}</p>
+      <p className="truncate border-b border-ink-200 pb-1 text-sm text-ink-800">
+        {value || <span className="text-ink-300">&mdash;</span>}
+      </p>
+    </div>
+  );
+}
+
+export default function DailyLogSheet({ log, meta, vehicleInfo = {} }) {
   const stepPath = buildStepPath(log.blocks);
+  const vehicleNumbers = [vehicleInfo.truckNumber, vehicleInfo.trailerNumber]
+    .filter(Boolean)
+    .join(" / ");
 
   return (
     <div className="rounded-2xl border border-ink-200 bg-white p-5 shadow-sm sm:p-6">
@@ -80,6 +100,20 @@ export default function DailyLogSheet({ log, meta }) {
             </span>
           ))}
         </div>
+      </div>
+
+      <div className="mb-5 grid grid-cols-2 gap-x-4 gap-y-3 rounded-lg bg-ink-50 p-4 sm:grid-cols-4">
+        <Field label="Total miles driving today" value={`${log.total_miles.toFixed(1)} mi`} />
+        <Field label="Truck / trailer no." value={vehicleNumbers} />
+        <Field label="Driver" value={vehicleInfo.driverName} />
+        <Field label="Co-driver" value={vehicleInfo.coDriverName} />
+        <Field label="Carrier" value={vehicleInfo.carrierName} />
+        <Field label="Main office address" value={vehicleInfo.mainOfficeAddress} />
+        <Field
+          label="Shipping doc # / shipper &amp; commodity"
+          value={vehicleInfo.shippingDocNumber}
+        />
+        <Field label="Driver signature" value={vehicleInfo.driverName ? "(certified above)" : ""} />
       </div>
 
       <div className="overflow-x-auto">

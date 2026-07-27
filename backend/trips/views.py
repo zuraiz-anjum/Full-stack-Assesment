@@ -44,6 +44,16 @@ class TripListCreateView(generics.ListAPIView):
             return [ScopedRateThrottle()]
         return []
 
+    VEHICLE_INFO_FIELDS = [
+        "carrier_name",
+        "main_office_address",
+        "truck_number",
+        "trailer_number",
+        "driver_name",
+        "co_driver_name",
+        "shipping_doc_number",
+    ]
+
     def post(self, request, *args, **kwargs):
         input_serializer = TripCreateSerializer(data=request.data)
         input_serializer.is_valid(raise_exception=True)
@@ -55,6 +65,7 @@ class TripListCreateView(generics.ListAPIView):
                 pickup_location_text=data["pickup_location"],
                 dropoff_location_text=data["dropoff_location"],
                 current_cycle_used_hours=data["current_cycle_used_hours"],
+                vehicle_info={field: data[field] for field in self.VEHICLE_INFO_FIELDS},
             )
         except RoutingError as exc:
             return Response({"detail": str(exc)}, status=status.HTTP_400_BAD_REQUEST)

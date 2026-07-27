@@ -56,6 +56,16 @@ export default function App() {
   }
 
   const result = trip?.result;
+  const vi = result?.vehicle_info;
+  const vehicleInfo = vi && {
+    carrierName: vi.carrier_name,
+    mainOfficeAddress: vi.main_office_address,
+    truckNumber: vi.truck_number,
+    trailerNumber: vi.trailer_number,
+    driverName: vi.driver_name,
+    coDriverName: vi.co_driver_name,
+    shippingDocNumber: vi.shipping_doc_number,
+  };
 
   return (
     <div className="min-h-full bg-ink-50">
@@ -117,7 +127,7 @@ export default function App() {
                     Daily log sheets ({result.daily_logs.length})
                   </h2>
                   {result.daily_logs.map((log) => (
-                    <DailyLogSheet key={log.date} log={log} />
+                    <DailyLogSheet key={log.date} log={log} vehicleInfo={vehicleInfo} />
                   ))}
                 </div>
               </>
