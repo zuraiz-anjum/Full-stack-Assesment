@@ -10,21 +10,21 @@ const MapView = lazy(() => import("./MapView"));
 
 function MapSkeleton() {
   return (
-    <div className="flex h-full w-full items-center justify-center rounded-2xl border border-ink-200 bg-ink-100">
-      <div className="h-6 w-6 animate-spin rounded-full border-2 border-ink-300 border-t-ink-600" />
+    <div className="flex h-full w-full items-center justify-center rounded-xl border border-ink-100 bg-ink-50">
+      <div className="h-6 w-6 animate-spin rounded-full border-2 border-ink-200 border-t-ink-700" />
     </div>
   );
 }
 
 function crashFallback(_error, reset) {
   return (
-    <div className="flex flex-col items-center justify-center gap-3 rounded-2xl border-2 border-dashed border-red-200 bg-red-50 px-6 py-16 text-center">
+    <div className="flex flex-col items-center justify-center gap-3 rounded-xl border-2 border-dashed border-red-200 bg-red-50 px-6 py-16 text-center">
       <AlertTriangle className="h-8 w-8 text-red-500" />
       <h2 className="text-lg font-semibold text-red-800">Couldn't display this trip</h2>
       <button
         type="button"
         onClick={reset}
-        className="mt-2 rounded-lg bg-ink-900 px-4 py-2 text-sm font-semibold text-white hover:bg-ink-800"
+        className="mt-2 rounded-lg bg-ink-950 px-4 py-2 text-sm font-semibold text-white hover:bg-ink-800"
       >
         Try again
       </button>
@@ -55,13 +55,13 @@ function SharedTripContent({ trip }) {
       </div>
       <RouteDirections legs={result.route.legs} />
       <div className="space-y-5">
-        <div className="flex items-center justify-between">
-          <h2 className="text-base font-semibold text-ink-900">
+        <div className="flex flex-wrap items-center justify-between gap-y-2">
+          <h2 className="text-lg font-bold tracking-tight text-ink-950">
             Daily log sheets ({result.daily_logs.length})
           </h2>
           <a
             href={sharedTripPdfUrl(trip.share_token_used)}
-            className="flex items-center gap-1.5 rounded-lg border border-ink-200 bg-white px-3 py-1.5 text-xs font-medium text-ink-600 shadow-sm transition hover:bg-ink-50"
+            className="flex items-center gap-1.5 rounded-lg border border-ink-100 bg-white px-3 py-1.5 text-xs font-medium text-ink-600 transition hover:border-ink-200 hover:bg-ink-50"
           >
             <Download className="h-3.5 w-3.5" />
             Download PDF
@@ -99,14 +99,14 @@ export default function SharedTripPage({ shareToken }) {
 
   return (
     <div className="min-h-full bg-ink-50">
-      <header className="border-b border-ink-200 bg-white">
+      <header className="border-b border-ink-100 bg-white">
         <div className="mx-auto flex max-w-5xl items-center justify-between px-4 py-4 sm:px-6">
           <div className="flex items-center gap-2.5">
-            <div className="rounded-lg bg-ink-900 p-2 text-amber-500">
+            <div className="rounded-lg bg-ink-950 p-2 text-amber-500">
               <Truck className="h-5 w-5" />
             </div>
             <div>
-              <p className="text-sm font-bold tracking-tight text-ink-900">RouteLog</p>
+              <p className="text-sm font-bold tracking-tight text-ink-950">RouteLog</p>
               <p className="text-xs text-ink-500">Shared trip (read-only)</p>
             </div>
           </div>
@@ -124,7 +124,7 @@ export default function SharedTripPage({ shareToken }) {
         )}
 
         {!loading && error && (
-          <div className="flex flex-col items-center justify-center gap-3 rounded-2xl border-2 border-dashed border-ink-200 bg-white px-6 py-16 text-center">
+          <div className="flex flex-col items-center justify-center gap-3 rounded-xl border-2 border-dashed border-ink-200 bg-white px-6 py-16 text-center">
             <AlertTriangle className="h-8 w-8 text-ink-500" />
             <h2 className="text-lg font-semibold text-ink-800">Link not found</h2>
             <p className="max-w-sm text-sm text-ink-500">

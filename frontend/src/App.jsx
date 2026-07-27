@@ -8,7 +8,7 @@ import { extractErrorMessage, getTrip, listTrips, planTrip } from "./lib/api";
 
 function tripResultsFallback(reset) {
   return (
-    <div className="flex flex-col items-center justify-center gap-3 rounded-2xl border-2 border-dashed border-red-200 bg-red-50 px-6 py-16 text-center">
+    <div className="flex flex-col items-center justify-center gap-3 rounded-xl border-2 border-dashed border-red-200 bg-red-50 px-6 py-16 text-center">
       <AlertTriangle className="h-8 w-8 text-red-500" />
       <h2 className="text-lg font-semibold text-red-800">Couldn't display this trip</h2>
       <p className="max-w-sm text-sm text-red-600">
@@ -18,7 +18,7 @@ function tripResultsFallback(reset) {
       <button
         type="button"
         onClick={reset}
-        className="mt-2 rounded-lg bg-ink-900 px-4 py-2 text-sm font-semibold text-white hover:bg-ink-800"
+        className="mt-2 rounded-lg bg-ink-950 px-4 py-2 text-sm font-semibold text-white hover:bg-ink-800"
       >
         Start over
       </button>

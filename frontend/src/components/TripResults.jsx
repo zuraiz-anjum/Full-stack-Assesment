@@ -73,11 +73,11 @@ export default function TripResults({ result, vehicleInfo, tripId, shareToken })
         <RouteDirections legs={result.route.legs} />
       </div>
       <div className="space-y-5">
-        <div className="flex items-center justify-between">
+        <div className="flex flex-wrap items-center justify-between gap-y-2">
           <h2 className="text-lg font-bold tracking-tight text-ink-950">
             Daily log sheets ({result.daily_logs.length})
           </h2>
-          <div className="print-hide flex items-center gap-2">
+          <div className="print-hide flex flex-wrap items-center gap-2">
             {shareToken && (
               <button
                 type="button"
