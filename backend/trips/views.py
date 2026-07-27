@@ -1,5 +1,6 @@
 import logging
 
+from django.http import HttpResponse
 from rest_framework import generics, status
 from rest_framework.response import Response
 from rest_framework.throttling import ScopedRateThrottle
@@ -9,6 +10,7 @@ from .models import Trip
 from .serializers import TripCreateSerializer, TripDetailSerializer, TripListSerializer
 from .services import routing
 from .services.hos_engine import TripTooLongError
+from .services.pdf_builder import build_trip_pdf
 from .services.routing import RoutingError
 from .services.trip_planner import plan_trip
 
@@ -107,3 +109,19 @@ class TripDetailView(generics.RetrieveAPIView):
         # /api/trips/1/, /2/, /3/... and read every other visitor's route
         # and vehicle/driver info.
         return Trip.objects.filter(owner_token=_owner_token(self.request))
+
+
+class TripPdfView(generics.RetrieveAPIView):
+    """Streams the trip's daily logs as a real PDF (one page per day),
+    laid out like the FMCSA paper form -- an alternative to relying on
+    the browser's print dialog, which varies by browser/OS."""
+
+    def get_queryset(self):
+        return Trip.objects.filter(owner_token=_owner_token(self.request))
+
+    def get(self, request, *args, **kwargs):
+        trip = self.get_object()
+        pdf_bytes = build_trip_pdf(trip.result)
+        response = HttpResponse(pdf_bytes, content_type="application/pdf")
+        response["Content-Disposition"] = f'attachment; filename="trip-{trip.id}-daily-logs.pdf"'
+        return response

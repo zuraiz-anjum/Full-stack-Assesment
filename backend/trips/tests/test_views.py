@@ -144,6 +144,35 @@ class TripListRetrieveTests(APITestCase):
         self.assertEqual(resp.status_code, status.HTTP_404_NOT_FOUND)
 
 
+class TripPdfTests(APITestCase):
+    OWNER = "owner-token-pdf"
+
+    def setUp(self):
+        self.trip = Trip.objects.create(
+            current_location="Chicago, IL",
+            pickup_location="Indianapolis, IN",
+            dropoff_location="Nashville, TN",
+            current_cycle_used_hours=10,
+            result=FAKE_RESULT,
+            owner_token=self.OWNER,
+        )
+
+    def test_returns_a_pdf_for_the_owner(self):
+        resp = self.client.get(f"/api/trips/{self.trip.id}/pdf/", HTTP_X_OWNER_TOKEN=self.OWNER)
+        self.assertEqual(resp.status_code, status.HTTP_200_OK)
+        self.assertEqual(resp["Content-Type"], "application/pdf")
+        self.assertIn(f"trip-{self.trip.id}-daily-logs.pdf", resp["Content-Disposition"])
+        self.assertEqual(resp.content[:4], b"%PDF")
+
+    def test_404s_for_another_owners_trip(self):
+        resp = self.client.get(f"/api/trips/{self.trip.id}/pdf/", HTTP_X_OWNER_TOKEN="someone-elses-token")
+        self.assertEqual(resp.status_code, status.HTTP_404_NOT_FOUND)
+
+    def test_404s_for_request_with_no_token(self):
+        resp = self.client.get(f"/api/trips/{self.trip.id}/pdf/")
+        self.assertEqual(resp.status_code, status.HTTP_404_NOT_FOUND)
+
+
 class LocationAutocompleteTests(APITestCase):
     @patch("trips.views.routing.autocomplete")
     def test_returns_places_from_the_routing_service(self, mock_autocomplete):

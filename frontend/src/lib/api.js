@@ -49,6 +49,11 @@ export async function getTrip(id) {
   return data;
 }
 
+export async function downloadTripPdf(id) {
+  const { data } = await client.get(`/trips/${id}/pdf/`, { responseType: "blob" });
+  return data;
+}
+
 export async function autocompleteLocation(query) {
   if (!query || query.trim().length < 2) return [];
   const { data } = await client.get("/locations/autocomplete/", { params: { q: query } });

@@ -147,7 +147,7 @@ export default function App() {
                 onReset={() => setTrip(null)}
                 fallback={(_error, reset) => tripResultsFallback(reset)}
               >
-                <TripResults result={result} vehicleInfo={vehicleInfo} />
+                <TripResults result={result} vehicleInfo={vehicleInfo} tripId={trip?.id} />
               </ErrorBoundary>
             )}
           </section>
