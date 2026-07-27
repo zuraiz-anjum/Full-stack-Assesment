@@ -58,13 +58,21 @@ body {
 
 /* --- Motion --- */
 
-/* Animates `left`, not `transform: translateX()` -- percentage values in
-   transform resolve against the element's OWN box (here, a ~24px icon),
-   not its container, so translateX(108%) would only move it ~26px. `left`
-   percentages correctly resolve against the positioned ancestor instead. */
+/* `left`/`top` animate smoothly in theory but force a layout recalculation
+   every frame (not compositor-only), which is what caused visible
+   stutter -- switched to `transform`, but plain translateX(%) resolves
+   against the element's OWN box (a ~24px icon) rather than its container,
+   which is the original bug that led here. Container query width units
+   (cqw) solve both: they resolve against the container, like a percentage
+   should, while staying on `transform` so the animation stays on the
+   compositor thread. Requires .drive-track below to set container-type. */
 @keyframes truck-drive {
-  0% { left: -8%; }
-  100% { left: 108%; }
+  0% { transform: translate(-8cqw, -55%); }
+  100% { transform: translate(108cqw, -55%); }
+}
+
+.drive-track {
+  container-type: inline-size;
 }
 
 @keyframes truck-bob {

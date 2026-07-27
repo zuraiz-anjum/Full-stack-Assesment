@@ -35,21 +35,21 @@ export default function SplashIntro() {
         <p className="text-lg font-semibold tracking-tight text-ink-950">RouteLog</p>
       </div>
 
-      <div className="relative mt-10 h-10 w-64 overflow-hidden sm:w-80">
+      <div className="drive-track relative mt-10 h-10 w-64 overflow-hidden sm:w-80">
         <svg className="absolute top-1/2 left-0 w-full -translate-y-1/2" height="2" viewBox="0 0 320 2">
           <line x1="0" y1="1" x2="320" y2="1" stroke="var(--color-ink-200)" strokeWidth="2" strokeDasharray="10 8" />
         </svg>
-        {/* The drive animates `left` (correctly resolves as a percentage of
-            this relative container) while a static transform handles the
-            vertical centering. The bob lives on the inner div and animates
-            its own `transform` -- keeping it off the outer div avoids two
-            animations fighting over the same `transform` property. */}
+        {/* The drive animates `transform` using container-query width units
+            (cqw) -- resolves against `.drive-track` above, same intent as a
+            percentage but staying on the compositor thread (no layout
+            recalculation per frame, unlike `left`/`top`, which is what
+            caused visible stutter). Vertical centering is the other half of
+            the same translate() call, using a plain % (correctly self-
+            relative for that purpose). The bob lives on the inner div so it
+            doesn't fight the outer div's transform for the same property. */}
         <div
           className="absolute top-1/2 text-amber-600"
-          style={{
-            animation: `truck-drive ${DRIVE_MS}ms ease-in-out forwards`,
-            transform: "translateY(-55%)",
-          }}
+          style={{ animation: `truck-drive ${DRIVE_MS}ms ease-in-out forwards` }}
         >
           <div style={{ animation: "truck-bob 0.7s ease-in-out infinite" }}>
             <Truck className="h-6 w-6" strokeWidth={2.25} />
