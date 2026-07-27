@@ -17,7 +17,7 @@ function Card({ icon: Icon, label, value, sub }) {
 
 export default function SummaryCards({ summary, route }) {
   return (
-    <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
+    <div className="grid grid-cols-1 gap-3 min-[420px]:grid-cols-2 sm:grid-cols-3">
       <Card icon={Route} label="Total distance" value={`${route.total_distance_miles.toLocaleString()} mi`} />
       <Card icon={Clock} label="Driving time" value={`${summary.driving_hours}h`} />
       <Card

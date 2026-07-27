@@ -1,3 +1,5 @@
+import { MoveHorizontal } from "lucide-react";
+
 const ROWS = [
   { key: "OFF_DUTY", label: "Off Duty", color: "#94a3b8" },
   { key: "SLEEPER_BERTH", label: "Sleeper Berth", color: "#6d5ce8" },
@@ -116,6 +118,10 @@ export default function DailyLogSheet({ log, meta, vehicleInfo = {} }) {
         <Field label="Driver signature" value={vehicleInfo.driverName ? "(certified above)" : ""} />
       </div>
 
+      <p className="mb-1.5 flex items-center gap-1 text-xs text-ink-400 sm:hidden print:hidden">
+        <MoveHorizontal className="h-3.5 w-3.5" />
+        Swipe to see the full 24-hour grid
+      </p>
       <div className="overflow-x-auto print:overflow-visible">
         <svg
           viewBox={`0 0 ${SVG_WIDTH} ${SVG_HEIGHT}`}

@@ -1,7 +1,6 @@
 import { Printer, Truck } from "lucide-react";
-import { useEffect, useState } from "react";
+import { lazy, Suspense, useEffect, useRef, useState } from "react";
 import DailyLogSheet from "./components/DailyLogSheet";
-import MapView from "./components/MapView";
 import RouteDirections from "./components/RouteDirections";
 import SummaryCards from "./components/SummaryCards";
 import TripForm from "./components/TripForm";
@@ -9,12 +8,36 @@ import TripHistorySidebar from "./components/TripHistorySidebar";
 import { extractErrorMessage, getTrip, listTrips, planTrip } from "./lib/api";
 import { addOwnTripId, getOwnTripIds } from "./lib/ownTrips";
 
+// Leaflet is the single heaviest dependency in the bundle and isn't needed
+// until a trip actually exists — split it into its own chunk so the form
+// (what every visitor sees first, often on mobile) loads and becomes
+// interactive without waiting on map code to parse.
+const MapView = lazy(() => import("./components/MapView"));
+
+function MapSkeleton() {
+  return (
+    <div className="flex h-full w-full items-center justify-center rounded-2xl border border-ink-200 bg-ink-100">
+      <div className="h-6 w-6 animate-spin rounded-full border-2 border-ink-300 border-t-ink-600" />
+    </div>
+  );
+}
+
 export default function App() {
   const [trip, setTrip] = useState(null);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
   const [history, setHistory] = useState([]);
   const [historyLoading, setHistoryLoading] = useState(true);
+  const resultsRef = useRef(null);
+
+  function scrollToResultsOnMobile() {
+    // On the stacked mobile layout, results sit below the history list --
+    // jump straight there instead of leaving the user to scroll past it.
+    // The side-by-side desktop layout (lg+) already shows both at once.
+    if (window.innerWidth < 1024) {
+      resultsRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+  }
 
   useEffect(() => {
     refreshHistory();
@@ -41,6 +64,7 @@ export default function App() {
       addOwnTripId(created.id);
       setTrip(created);
       refreshHistory();
+      requestAnimationFrame(scrollToResultsOnMobile);
     } catch (err) {
       setError(extractErrorMessage(err));
     } finally {
@@ -102,7 +126,7 @@ export default function App() {
             />
           </aside>
 
-          <section className="min-w-0 space-y-6">
+          <section ref={resultsRef} className="min-w-0 space-y-6">
             {!result && (
               <div className="flex h-full min-h-[420px] flex-col items-center justify-center rounded-2xl border-2 border-dashed border-ink-200 bg-white/50 px-6 text-center">
                 <div className="rounded-full bg-ink-900 p-4 text-amber-500">
@@ -120,12 +144,14 @@ export default function App() {
               <>
                 <div className="print-hide space-y-6">
                   <SummaryCards summary={result.summary} route={result.route} />
-                  <div className="h-[420px]">
-                    <MapView
-                      waypoints={result.waypoints}
-                      geometry={result.route.geometry}
-                      stops={result.stops}
-                    />
+                  <div className="h-[280px] sm:h-[420px]">
+                    <Suspense fallback={<MapSkeleton />}>
+                      <MapView
+                        waypoints={result.waypoints}
+                        geometry={result.route.geometry}
+                        stops={result.stops}
+                      />
+                    </Suspense>
                   </div>
                   <RouteDirections legs={result.route.legs} />
                 </div>
