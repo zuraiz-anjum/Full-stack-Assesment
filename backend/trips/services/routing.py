@@ -47,7 +47,7 @@ def geocode(query: str) -> GeocodedPlace:
 
     resp = requests.get(
         f"{ORS_BASE_URL}/geocode/search",
-        params={"api_key": _api_key(), "text": query, "size": 1},
+        params={"api_key": _api_key(), "text": query, "size": 1, "boundary.country": "USA"},
         timeout=REQUEST_TIMEOUT_SECONDS,
     )
     if resp.status_code != 200:
@@ -70,7 +70,7 @@ def autocomplete(query: str, limit: int = 5) -> list[GeocodedPlace]:
 
     resp = requests.get(
         f"{ORS_BASE_URL}/geocode/autocomplete",
-        params={"api_key": _api_key(), "text": query, "size": limit},
+        params={"api_key": _api_key(), "text": query, "size": limit, "boundary.country": "USA"},
         timeout=REQUEST_TIMEOUT_SECONDS,
     )
     if resp.status_code != 200:

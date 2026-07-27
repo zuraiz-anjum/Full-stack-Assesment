@@ -93,7 +93,7 @@ export default function LocationInput({ id, label, placeholder, value, onChange,
                 }`}
               >
                 <MapPin className="mt-0.5 h-3.5 w-3.5 shrink-0 text-ink-400" />
-                <span className="truncate">{s.label}</span>
+                <span className="min-w-0">{s.label}</span>
               </button>
             </li>
           ))}
