@@ -135,10 +135,12 @@ export default function App() {
                     <line x1="0" y1="1" x2="160" y2="1" stroke="var(--color-ink-200)" strokeWidth="2" className="road-dashed" />
                   </svg>
                   <div
-                    className="absolute top-1/2 left-1/2 -translate-x-1/2 text-ink-950"
-                    style={{ animation: "truck-bob 1.8s ease-in-out infinite", transform: "translate(-50%, -55%)" }}
+                    className="absolute top-1/2 left-1/2 text-ink-950"
+                    style={{ transform: "translate(-50%, -55%)" }}
                   >
-                    <Truck className="h-7 w-7" />
+                    <div style={{ animation: "truck-bob 1.8s ease-in-out infinite" }}>
+                      <Truck className="h-7 w-7" />
+                    </div>
                   </div>
                 </div>
                 <h2 className="mt-4 text-lg font-semibold text-ink-800">No trip planned yet</h2>

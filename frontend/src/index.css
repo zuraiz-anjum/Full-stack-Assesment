@@ -58,9 +58,13 @@ body {
 
 /* --- Motion --- */
 
+/* Animates `left`, not `transform: translateX()` -- percentage values in
+   transform resolve against the element's OWN box (here, a ~24px icon),
+   not its container, so translateX(108%) would only move it ~26px. `left`
+   percentages correctly resolve against the positioned ancestor instead. */
 @keyframes truck-drive {
-  0% { transform: translateX(-8%); }
-  100% { transform: translateX(108%); }
+  0% { left: -8%; }
+  100% { left: 108%; }
 }
 
 @keyframes truck-bob {
