@@ -1,8 +1,8 @@
 import { Truck } from "lucide-react";
 import { useEffect, useState } from "react";
 
-const DRIVE_MS = 1300;
-const HOLD_MS = 250;
+const DRIVE_MS = 2400;
+const HOLD_MS = 300;
 
 // A brief truck-on-the-road intro played once per page load, then it fades
 // out and never mounts again for the rest of the session -- a first
@@ -47,11 +47,11 @@ export default function SplashIntro() {
         <div
           className="absolute top-1/2 text-amber-600"
           style={{
-            animation: `truck-drive ${DRIVE_MS}ms cubic-bezier(0.45, 0, 0.55, 1) forwards`,
+            animation: `truck-drive ${DRIVE_MS}ms ease-in-out forwards`,
             transform: "translateY(-55%)",
           }}
         >
-          <div style={{ animation: "truck-bob 0.35s ease-in-out infinite" }}>
+          <div style={{ animation: "truck-bob 0.7s ease-in-out infinite" }}>
             <Truck className="h-6 w-6" strokeWidth={2.25} />
           </div>
         </div>
