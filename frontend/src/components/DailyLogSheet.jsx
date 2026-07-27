@@ -102,7 +102,7 @@ export default function DailyLogSheet({ log, meta, vehicleInfo = {} }) {
         </div>
       </div>
 
-      <div className="mb-5 grid grid-cols-2 gap-x-4 gap-y-3 rounded-lg bg-ink-50 p-4 sm:grid-cols-4">
+      <div className="mb-5 grid grid-cols-2 gap-x-4 gap-y-3 rounded-lg bg-ink-50 p-4 sm:grid-cols-4 print:grid-cols-2">
         <Field label="Total miles driving today" value={`${log.total_miles.toFixed(1)} mi`} />
         <Field label="Truck / trailer no." value={vehicleNumbers} />
         <Field label="Driver" value={vehicleInfo.driverName} />
@@ -116,10 +116,10 @@ export default function DailyLogSheet({ log, meta, vehicleInfo = {} }) {
         <Field label="Driver signature" value={vehicleInfo.driverName ? "(certified above)" : ""} />
       </div>
 
-      <div className="overflow-x-auto">
+      <div className="overflow-x-auto print:overflow-visible">
         <svg
           viewBox={`0 0 ${SVG_WIDTH} ${SVG_HEIGHT}`}
-          className="min-w-[820px]"
+          className="min-w-[820px] print:w-full print:min-w-0"
           role="img"
           aria-label={`ELD daily log grid for day ${log.day_index}`}
         >

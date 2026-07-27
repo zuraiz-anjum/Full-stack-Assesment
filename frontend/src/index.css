@@ -44,3 +44,17 @@ body {
 .leaflet-container {
   font-family: var(--font-sans);
 }
+
+@media print {
+  .print-hide {
+    display: none !important;
+  }
+  .print-area {
+    page-break-inside: avoid;
+    break-inside: avoid;
+  }
+  body,
+  .bg-ink-50 {
+    background: white !important;
+  }
+}

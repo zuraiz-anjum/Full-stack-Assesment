@@ -1,4 +1,4 @@
-import { Truck } from "lucide-react";
+import { Printer, Truck } from "lucide-react";
 import { useEffect, useState } from "react";
 import DailyLogSheet from "./components/DailyLogSheet";
 import MapView from "./components/MapView";
@@ -73,7 +73,7 @@ export default function App() {
 
   return (
     <div className="min-h-full bg-ink-50">
-      <header className="border-b border-ink-200 bg-white">
+      <header className="print-hide border-b border-ink-200 bg-white">
         <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-4 sm:px-6">
           <div className="flex items-center gap-2.5">
             <div className="rounded-lg bg-ink-900 p-2 text-amber-500">
@@ -92,7 +92,7 @@ export default function App() {
 
       <main className="mx-auto max-w-7xl px-4 py-6 sm:px-6 sm:py-8">
         <div className="grid grid-cols-1 gap-6 lg:grid-cols-[360px_1fr]">
-          <aside className="space-y-6">
+          <aside className="print-hide space-y-6">
             <TripForm onSubmit={handleSubmit} submitting={submitting} errorMessage={error} />
             <TripHistorySidebar
               trips={history}
@@ -118,21 +118,35 @@ export default function App() {
 
             {result && (
               <>
-                <SummaryCards summary={result.summary} route={result.route} />
-                <div className="h-[420px]">
-                  <MapView
-                    waypoints={result.waypoints}
-                    geometry={result.route.geometry}
-                    stops={result.stops}
-                  />
+                <div className="print-hide space-y-6">
+                  <SummaryCards summary={result.summary} route={result.route} />
+                  <div className="h-[420px]">
+                    <MapView
+                      waypoints={result.waypoints}
+                      geometry={result.route.geometry}
+                      stops={result.stops}
+                    />
+                  </div>
+                  <RouteDirections legs={result.route.legs} />
                 </div>
-                <RouteDirections legs={result.route.legs} />
                 <div className="space-y-5">
-                  <h2 className="text-base font-semibold text-ink-900">
-                    Daily log sheets ({result.daily_logs.length})
-                  </h2>
+                  <div className="flex items-center justify-between">
+                    <h2 className="text-base font-semibold text-ink-900">
+                      Daily log sheets ({result.daily_logs.length})
+                    </h2>
+                    <button
+                      type="button"
+                      onClick={() => window.print()}
+                      className="print-hide flex items-center gap-1.5 rounded-lg border border-ink-200 bg-white px-3 py-1.5 text-xs font-medium text-ink-600 shadow-sm transition hover:bg-ink-50"
+                    >
+                      <Printer className="h-3.5 w-3.5" />
+                      Print / Save as PDF
+                    </button>
+                  </div>
                   {result.daily_logs.map((log) => (
-                    <DailyLogSheet key={log.date} log={log} vehicleInfo={vehicleInfo} />
+                    <div key={log.date} className="print-area">
+                      <DailyLogSheet log={log} vehicleInfo={vehicleInfo} />
+                    </div>
                   ))}
                 </div>
               </>
@@ -141,7 +155,7 @@ export default function App() {
         </div>
       </main>
 
-      <footer className="mt-10 border-t border-ink-200 py-6 text-center text-xs text-ink-400">
+      <footer className="print-hide mt-10 border-t border-ink-200 py-6 text-center text-xs text-ink-400">
         Built for the FMCSA property-carrier HOS ruleset (49 CFR Part 395). Assumes no adverse
         driving conditions, a fuel stop every 1,000 miles, and 1 hour each for pickup and
         drop-off.
