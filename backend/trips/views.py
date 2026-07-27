@@ -30,11 +30,20 @@ class LocationAutocompleteView(APIView):
         )
 
 
+def _owner_token(request) -> str:
+    return request.META.get("HTTP_X_OWNER_TOKEN", "")[:64]
+
+
 class TripListCreateView(generics.ListAPIView):
     """GET: recent trip history. POST: plan a new trip and persist the result."""
 
-    queryset = Trip.objects.all()[:20]
     serializer_class = TripListSerializer
+
+    def get_queryset(self):
+        # No auth in this app -- scope every read to the requesting browser's
+        # own anonymous token instead of exposing every visitor's trips
+        # (locations, vehicle/driver info) to anyone who calls this endpoint.
+        return Trip.objects.filter(owner_token=_owner_token(self.request))[:20]
 
     def get_throttles(self):
         # Only the expensive path (POST, which burns several OpenRouteService
@@ -84,10 +93,17 @@ class TripListCreateView(generics.ListAPIView):
             dropoff_location=data["dropoff_location"],
             current_cycle_used_hours=data["current_cycle_used_hours"],
             result=result,
+            owner_token=_owner_token(request),
         )
         return Response(TripDetailSerializer(trip).data, status=status.HTTP_201_CREATED)
 
 
 class TripDetailView(generics.RetrieveAPIView):
-    queryset = Trip.objects.all()
     serializer_class = TripDetailSerializer
+
+    def get_queryset(self):
+        # Same owner-token scoping as the list view -- without it, trip IDs
+        # are sequential and guessable, so anyone could page through
+        # /api/trips/1/, /2/, /3/... and read every other visitor's route
+        # and vehicle/driver info.
+        return Trip.objects.filter(owner_token=_owner_token(self.request))

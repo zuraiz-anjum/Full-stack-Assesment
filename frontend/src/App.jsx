@@ -5,7 +5,6 @@ import TripForm from "./components/TripForm";
 import TripHistorySidebar from "./components/TripHistorySidebar";
 import TripResults from "./components/TripResults";
 import { extractErrorMessage, getTrip, listTrips, planTrip } from "./lib/api";
-import { addOwnTripId, getOwnTripIds } from "./lib/ownTrips";
 
 function tripResultsFallback(reset) {
   return (
@@ -51,9 +50,7 @@ export default function App() {
   async function refreshHistory() {
     try {
       setHistoryLoading(true);
-      const trips = await listTrips();
-      const ownIds = getOwnTripIds();
-      setHistory(trips.filter((t) => ownIds.has(t.id)));
+      setHistory(await listTrips());
     } catch {
       // History is a nice-to-have; a failed fetch shouldn't block the app.
     } finally {
@@ -66,7 +63,6 @@ export default function App() {
     setError("");
     try {
       const created = await planTrip(formValues);
-      addOwnTripId(created.id);
       setTrip(created);
       refreshHistory();
       requestAnimationFrame(scrollToResultsOnMobile);

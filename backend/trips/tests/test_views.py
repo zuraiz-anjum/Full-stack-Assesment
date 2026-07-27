@@ -41,6 +41,11 @@ class TripCreateTests(APITestCase):
         self.assertEqual(resp.data["result"], FAKE_RESULT)
 
     @patch("trips.views.plan_trip", return_value=FAKE_RESULT)
+    def test_created_trip_is_tagged_with_the_requesting_owner_token(self, mock_plan_trip):
+        self.client.post("/api/trips/", VALID_PAYLOAD, format="json", HTTP_X_OWNER_TOKEN="my-token")
+        self.assertEqual(Trip.objects.get().owner_token, "my-token")
+
+    @patch("trips.views.plan_trip", return_value=FAKE_RESULT)
     def test_optional_vehicle_fields_are_passed_through(self, mock_plan_trip):
         payload = {**VALID_PAYLOAD, "carrier_name": "Acme Freight LLC"}
         self.client.post("/api/trips/", payload, format="json")
@@ -84,6 +89,8 @@ class TripCreateTests(APITestCase):
 
 
 class TripListRetrieveTests(APITestCase):
+    OWNER = "owner-token-a"
+
     def setUp(self):
         self.trip = Trip.objects.create(
             current_location="Chicago, IL",
@@ -91,10 +98,11 @@ class TripListRetrieveTests(APITestCase):
             dropoff_location="Nashville, TN",
             current_cycle_used_hours=10,
             result=FAKE_RESULT,
+            owner_token=self.OWNER,
         )
 
     def test_list_returns_created_trips(self):
-        resp = self.client.get("/api/trips/")
+        resp = self.client.get("/api/trips/", HTTP_X_OWNER_TOKEN=self.OWNER)
         self.assertEqual(resp.status_code, status.HTTP_200_OK)
         self.assertEqual(len(resp.data), 1)
         self.assertEqual(resp.data[0]["id"], self.trip.id)
@@ -102,16 +110,37 @@ class TripListRetrieveTests(APITestCase):
     def test_list_does_not_leak_get_throttled(self):
         # Browsing history should never be rate-limited (only POST is).
         for _ in range(30):
-            resp = self.client.get("/api/trips/")
+            resp = self.client.get("/api/trips/", HTTP_X_OWNER_TOKEN=self.OWNER)
             self.assertEqual(resp.status_code, status.HTTP_200_OK)
 
     def test_detail_returns_full_result(self):
-        resp = self.client.get(f"/api/trips/{self.trip.id}/")
+        resp = self.client.get(f"/api/trips/{self.trip.id}/", HTTP_X_OWNER_TOKEN=self.OWNER)
         self.assertEqual(resp.status_code, status.HTTP_200_OK)
         self.assertEqual(resp.data["result"], FAKE_RESULT)
 
     def test_detail_404s_for_missing_trip(self):
-        resp = self.client.get("/api/trips/999999/")
+        resp = self.client.get("/api/trips/999999/", HTTP_X_OWNER_TOKEN=self.OWNER)
+        self.assertEqual(resp.status_code, status.HTTP_404_NOT_FOUND)
+
+    def test_list_does_not_include_another_owners_trips(self):
+        resp = self.client.get("/api/trips/", HTTP_X_OWNER_TOKEN="someone-elses-token")
+        self.assertEqual(resp.status_code, status.HTTP_200_OK)
+        self.assertEqual(resp.data, [])
+
+    def test_list_with_no_token_does_not_include_another_owners_trips(self):
+        resp = self.client.get("/api/trips/")
+        self.assertEqual(resp.status_code, status.HTTP_200_OK)
+        self.assertEqual(resp.data, [])
+
+    def test_detail_404s_for_another_owners_trip(self):
+        # Trip IDs are sequential and guessable -- confirms a visitor can't
+        # page through /api/trips/<id>/ and read someone else's route,
+        # vehicle info, or driver details just by trying nearby IDs.
+        resp = self.client.get(f"/api/trips/{self.trip.id}/", HTTP_X_OWNER_TOKEN="someone-elses-token")
+        self.assertEqual(resp.status_code, status.HTTP_404_NOT_FOUND)
+
+    def test_detail_404s_for_request_with_no_token(self):
+        resp = self.client.get(f"/api/trips/{self.trip.id}/")
         self.assertEqual(resp.status_code, status.HTTP_404_NOT_FOUND)
 
 

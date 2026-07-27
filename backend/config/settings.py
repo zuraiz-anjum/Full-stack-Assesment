@@ -6,6 +6,7 @@ import os
 from pathlib import Path
 
 import dj_database_url
+from corsheaders.defaults import default_headers
 from dotenv import load_dotenv
 
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -139,6 +140,8 @@ REST_FRAMEWORK = {
     # chain a client could pad with fake entries to dodge rate limiting.
     "NUM_PROXIES": 1,
 }
+
+CORS_ALLOW_HEADERS = [*default_headers, "x-owner-token"]
 
 CORS_ALLOWED_ORIGINS = [
     o.strip()

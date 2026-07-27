@@ -7,6 +7,10 @@ class Trip(models.Model):
     dropoff_location = models.CharField(max_length=255)
     current_cycle_used_hours = models.FloatField()
     result = models.JSONField()
+    # There's no user auth in this app -- every visitor would otherwise share
+    # one global trip list. Each browser generates a random token (see
+    # frontend's ownerToken.js) and only ever sees trips tagged with its own.
+    owner_token = models.CharField(max_length=64, db_index=True, blank=True, default="")
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
