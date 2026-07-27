@@ -1,5 +1,7 @@
 # RouteLog — HOS Trip Planner & ELD Log Generator
 
+[![CI](https://github.com/zuraiz-anjum/Full-stack-Assesment/actions/workflows/ci.yml/badge.svg)](https://github.com/zuraiz-anjum/Full-stack-Assesment/actions/workflows/ci.yml)
+
 Takes a trip (current location, pickup, drop-off, and how many hours are already
 used in the driver's 70-hour/8-day cycle) and produces a driving route plus a
 full set of FMCSA-compliant daily log sheets for the trip, including every
