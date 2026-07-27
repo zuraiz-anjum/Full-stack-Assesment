@@ -101,10 +101,8 @@ export default function SharedTripPage({ shareToken }) {
     <div className="min-h-full bg-ink-50">
       <header className="border-b border-ink-100 bg-white">
         <div className="mx-auto flex max-w-5xl items-center justify-between px-4 py-4 sm:px-6">
-          <div className="flex items-center gap-2.5">
-            <div className="rounded-lg bg-ink-950 p-2 text-amber-500">
-              <Truck className="h-5 w-5" />
-            </div>
+          <div className="flex items-center gap-2">
+            <Truck className="h-5 w-5 text-ink-950" strokeWidth={1.75} />
             <div>
               <p className="text-sm font-bold tracking-tight text-ink-950">RouteLog</p>
               <p className="text-xs text-ink-500">Shared trip (read-only)</p>

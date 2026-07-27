@@ -28,10 +28,8 @@ export default function SplashIntro() {
       }`}
       aria-hidden="true"
     >
-      <div className="flex items-center gap-3">
-        <div className="rounded-lg bg-ink-950 p-2.5 text-amber-500">
-          <Truck className="h-6 w-6" />
-        </div>
+      <div className="flex items-center gap-2.5">
+        <Truck className="h-7 w-7 text-ink-950" strokeWidth={1.75} />
         <p className="text-lg font-semibold tracking-tight text-ink-950">RouteLog</p>
       </div>
 
