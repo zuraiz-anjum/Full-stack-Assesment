@@ -2,6 +2,7 @@ import logging
 
 from rest_framework import generics, status
 from rest_framework.response import Response
+from rest_framework.throttling import ScopedRateThrottle
 from rest_framework.views import APIView
 
 from .models import Trip
@@ -15,6 +16,9 @@ logger = logging.getLogger(__name__)
 
 
 class LocationAutocompleteView(APIView):
+    throttle_classes = [ScopedRateThrottle]
+    throttle_scope = "autocomplete"
+
     def get(self, request):
         query = request.query_params.get("q", "")
         try:
@@ -31,6 +35,14 @@ class TripListCreateView(generics.ListAPIView):
 
     queryset = Trip.objects.all()[:20]
     serializer_class = TripListSerializer
+
+    def get_throttles(self):
+        # Only the expensive path (POST, which burns several OpenRouteService
+        # calls per request) is rate-limited — browsing history stays free.
+        if self.request.method == "POST":
+            self.throttle_scope = "trip-create"
+            return [ScopedRateThrottle()]
+        return []
 
     def post(self, request, *args, **kwargs):
         input_serializer = TripCreateSerializer(data=request.data)

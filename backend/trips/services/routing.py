@@ -2,10 +2,13 @@
 
 from __future__ import annotations
 
+import logging
 from dataclasses import dataclass
 
 import requests
 from django.conf import settings
+
+logger = logging.getLogger(__name__)
 
 ORS_BASE_URL = "https://api.openrouteservice.org"
 METERS_PER_MILE = 1609.344
@@ -51,7 +54,8 @@ def geocode(query: str) -> GeocodedPlace:
         timeout=REQUEST_TIMEOUT_SECONDS,
     )
     if resp.status_code != 200:
-        raise RoutingError(f"Geocoding failed for '{query}': {resp.status_code} {resp.text[:200]}")
+        logger.warning("ORS geocoding failed for %r: %s %s", query, resp.status_code, resp.text[:500])
+        raise RoutingError(f"We couldn't look up '{query}'. Please try a different search term.")
 
     features = resp.json().get("features", [])
     if not features:
@@ -111,9 +115,13 @@ def get_route(start: GeocodedPlace, end: GeocodedPlace) -> RouteResult:
         timeout=REQUEST_TIMEOUT_SECONDS,
     )
     if resp.status_code != 200:
+        logger.warning(
+            "ORS directions failed (%s -> %s): %s %s",
+            start.label, end.label, resp.status_code, resp.text[:500],
+        )
         raise RoutingError(
-            f"Routing failed from '{start.label}' to '{end.label}': "
-            f"{resp.status_code} {resp.text[:200]}"
+            f"We couldn't find a drivable route between '{start.label}' and "
+            f"'{end.label}'. Try a more specific address for each location."
         )
 
     data = resp.json()

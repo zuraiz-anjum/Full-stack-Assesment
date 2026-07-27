@@ -107,6 +107,10 @@ DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 REST_FRAMEWORK = {
     "DEFAULT_RENDERER_CLASSES": ["rest_framework.renderers.JSONRenderer"],
     "DEFAULT_PARSER_CLASSES": ["rest_framework.parsers.JSONParser"],
+    "DEFAULT_THROTTLE_RATES": {
+        "trip-create": "20/hour",
+        "autocomplete": "60/minute",
+    },
 }
 
 CORS_ALLOWED_ORIGINS = [
@@ -114,6 +118,10 @@ CORS_ALLOWED_ORIGINS = [
     for o in os.environ.get("CORS_ALLOWED_ORIGINS", "http://localhost:5173").split(",")
     if o.strip()
 ]
+# Scoped to this project's own Vercel deployments only (production + preview
+# builds, e.g. "full-stack-assesment-smoky.vercel.app" or
+# "full-stack-assesment-git-master-zuraiz.vercel.app") — NOT every Vercel
+# app on the internet, which "https://.*\.vercel\.app$" would have allowed.
 CORS_ALLOWED_ORIGIN_REGEXES = [
-    r"^https://.*\.vercel\.app$",
+    r"^https://full-stack-assesment(-[a-z0-9-]+)?\.vercel\.app$",
 ]
