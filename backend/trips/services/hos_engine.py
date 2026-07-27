@@ -81,6 +81,8 @@ class DutySegment:
     # Fraction (0..1) of `leg_name`'s total distance covered *by the end*
     # of this segment. Used later to interpolate a real-world location.
     leg_progress_fraction: float | None = None
+    # Populated by trip_planner after the fact: {"lat":.., "lon":.., "label":..}
+    resolved_location: dict | None = None
 
     @property
     def duration_hours(self) -> float:
@@ -95,6 +97,11 @@ class _SimState:
     driving_in_window: float = 0.0
     window_start: datetime = field(default=None)  # type: ignore[assignment]
     distance_since_fuel: float = 0.0
+    # Where the truck physically is right now, expressed as (leg name,
+    # fraction of that leg's distance covered) — used to tag inserted
+    # rest/fuel stops with a route position for later map/remarks display.
+    last_leg_name: str | None = None
+    last_fraction: float = 0.0
 
     def __post_init__(self):
         if self.window_start is None:
@@ -142,11 +149,15 @@ def simulate_trip(
 
         # A 34-hour restart also satisfies every shorter reset, so it takes
         # priority whenever the weekly cycle is the binding constraint.
+        here_leg, here_fraction = state.last_leg_name, state.last_fraction
+
         if cycle_remaining <= EPSILON:
             _append(
                 DutyStatus.OFF_DUTY,
                 RESTART_HOURS,
                 "34-hour restart (70-hour/8-day cycle reset)",
+                leg_name=here_leg,
+                leg_progress_fraction=here_fraction,
             )
             state.cycle_used = 0.0
             state.driving_in_window = 0.0
@@ -155,19 +166,37 @@ def simulate_trip(
             return
 
         if window_remaining <= EPSILON or (is_driving and driving_remaining <= EPSILON):
-            _append(DutyStatus.OFF_DUTY, MIN_OFF_DUTY_RESET, "Required 10-hour rest period")
+            _append(
+                DutyStatus.OFF_DUTY,
+                MIN_OFF_DUTY_RESET,
+                "Required 10-hour rest period",
+                leg_name=here_leg,
+                leg_progress_fraction=here_fraction,
+            )
             state.driving_in_window = 0.0
             state.driving_since_break = 0.0
             state.window_start = state.clock
             return
 
         if is_driving and break_remaining <= EPSILON:
-            _append(DutyStatus.OFF_DUTY, BREAK_DURATION, "Required 30-minute break")
+            _append(
+                DutyStatus.OFF_DUTY,
+                BREAK_DURATION,
+                "Required 30-minute break",
+                leg_name=here_leg,
+                leg_progress_fraction=here_fraction,
+            )
             state.driving_since_break = 0.0
             return
 
         if is_driving and fuel_remaining_hours <= EPSILON:
-            _append(DutyStatus.ON_DUTY_NOT_DRIVING, FUEL_STOP_DURATION, "Fuel stop")
+            _append(
+                DutyStatus.ON_DUTY_NOT_DRIVING,
+                FUEL_STOP_DURATION,
+                "Fuel stop",
+                leg_name=here_leg,
+                leg_progress_fraction=here_fraction,
+            )
             state.distance_since_fuel = 0.0
             state.driving_since_break = 0.0
             return
@@ -240,6 +269,8 @@ def simulate_trip(
             state.driving_in_window += chunk
             state.driving_since_break += chunk
             state.distance_since_fuel += chunk_miles
+            state.last_leg_name = leg.name
+            state.last_fraction = min(fraction, 1.0)
             remaining_hours -= chunk
 
     def stationary_stop(hours: float, label: str, leg_name: str) -> None:
@@ -260,9 +291,15 @@ def simulate_trip(
                 leg_name=leg_name,
                 leg_progress_fraction=1.0,
             )
+            state.last_leg_name = leg_name
+            state.last_fraction = 1.0
             if chunk >= BREAK_DURATION - EPSILON:
                 state.driving_since_break = 0.0
             remaining_hours -= chunk
+
+    if legs:
+        state.last_leg_name = legs[0].name
+        state.last_fraction = 0.0
 
     for leg in legs:
         if leg.distance_miles > 0 and leg.duration_hours > 0:

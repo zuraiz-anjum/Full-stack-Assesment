@@ -79,6 +79,12 @@ class MandatoryBreakTests(TestCase):
         driving_before_break = self.segments[2].duration_hours
         self.assertAlmostEqual(driving_before_break, 8.0)
 
+    def test_inserted_break_is_tagged_with_a_route_position(self):
+        break_segment = self.segments[3]
+        self.assertEqual(break_segment.leg_name, "pickup -> dropoff")
+        # 8 hours driven out of 9 total on that leg => 8/9 of the way along it.
+        self.assertAlmostEqual(break_segment.leg_progress_fraction, 8 / 9, places=4)
+
     def test_break_time_does_not_count_toward_cycle(self):
         on_duty_hours = sum(
             s.duration_hours
