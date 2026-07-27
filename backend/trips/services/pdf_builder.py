@@ -30,7 +30,7 @@ ROWS = [
 ROW_INDEX = {key: i for i, (key, _, _) in enumerate(ROWS)}
 
 GRID_LEFT = MARGIN + 1.5 * inch
-GRID_TOP_OFFSET = 1.9 * inch  # distance from top margin down to the grid
+GRID_TOP_OFFSET = 2.2 * inch  # distance from top margin down to the grid (3 rows of header fields)
 ROW_HEIGHT = 0.42 * inch
 GRID_HEIGHT = ROW_HEIGHT * len(ROWS)
 GRID_WIDTH = PAGE_WIDTH - GRID_LEFT - MARGIN - 0.8 * inch  # leave room for totals col
@@ -73,6 +73,17 @@ def _format_clock(hour_float: float) -> str:
     return f"{h12}:{m:02d} {period}"
 
 
+def _from_to(log: dict) -> tuple[str, str]:
+    """Where the driver was at the start vs. end of this 24-hour period,
+    the way the paper form's "From" / "To" boxes work -- approximated from
+    the day's remarks, since that's the only per-day location data we have."""
+    remarks = log.get("remarks") or []
+    located = [r for r in remarks if r.get("location_label")]
+    if not located:
+        return "—", "—"
+    return located[0]["location_label"], located[-1]["location_label"]
+
+
 def _draw_header(c: canvas.Canvas, top_y: float, log: dict, vehicle_info: dict, day_total: int) -> None:
     c.setFont("Helvetica-Bold", 14)
     c.setFillColor(INK)
@@ -89,14 +100,18 @@ def _draw_header(c: canvas.Canvas, top_y: float, log: dict, vehicle_info: dict, 
         PAGE_WIDTH - MARGIN, top_y, "24-hour period starting time: Midnight"
     )
 
+    from_loc, to_loc = _from_to(log)
     fields = [
+        ("Date", log_date.strftime("%m/%d/%Y")),
+        ("From", from_loc),
+        ("To", to_loc),
+        ("Total miles driving today", f"{log.get('total_miles', 0):.1f} mi"),
         ("Carrier", vehicle_info.get("carrier_name") or ""),
         ("Main office address", vehicle_info.get("main_office_address") or ""),
-        ("Driver", vehicle_info.get("driver_name") or ""),
-        ("Co-driver", vehicle_info.get("co_driver_name") or ""),
         ("Truck / trailer no.", " / ".join(filter(None, [vehicle_info.get("truck_number"), vehicle_info.get("trailer_number")]))),
         ("Shipping doc # / shipper & commodity", vehicle_info.get("shipping_doc_number") or ""),
-        ("Total miles driving today", f"{log.get('total_miles', 0):.1f} mi"),
+        ("Driver", vehicle_info.get("driver_name") or ""),
+        ("Co-driver", vehicle_info.get("co_driver_name") or ""),
     ]
 
     col_width = (PAGE_WIDTH - 2 * MARGIN) / 4

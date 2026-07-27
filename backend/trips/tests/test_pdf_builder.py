@@ -1,6 +1,6 @@
 from unittest import TestCase
 
-from trips.services.pdf_builder import build_trip_pdf
+from trips.services.pdf_builder import _from_to, build_trip_pdf
 
 BASE_RESULT = {
     "vehicle_info": {
@@ -76,3 +76,21 @@ class BuildTripPdfTests(TestCase):
         }
         pdf_bytes = build_trip_pdf(result)
         self.assertEqual(pdf_bytes[:4], b"%PDF")
+
+
+class FromToTests(TestCase):
+    def test_uses_first_and_last_located_remark(self):
+        log = BASE_RESULT["daily_logs"][0]
+        self.assertEqual(_from_to(log), ("Chicago, IL, USA", "Indianapolis, IN, USA"))
+
+    def test_single_remark_is_both_from_and_to(self):
+        log = {"remarks": [{"hour": 5.0, "location_label": "Nashville, TN, USA"}]}
+        self.assertEqual(_from_to(log), ("Nashville, TN, USA", "Nashville, TN, USA"))
+
+    def test_no_located_remarks_falls_back_to_dashes(self):
+        self.assertEqual(_from_to({"remarks": []}), ("—", "—"))
+        self.assertEqual(_from_to({}), ("—", "—"))
+        self.assertEqual(
+            _from_to({"remarks": [{"hour": 1.0, "activity_label": "no location on this one"}]}),
+            ("—", "—"),
+        )

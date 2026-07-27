@@ -66,6 +66,12 @@ function buildStepPath(blocks) {
   return "M " + points.map(([x, y]) => `${x.toFixed(1)},${y.toFixed(1)}`).join(" L ");
 }
 
+function fromTo(log) {
+  const located = (log.remarks ?? []).filter((r) => r.location_label);
+  if (located.length === 0) return ["", ""];
+  return [located[0].location_label, located[located.length - 1].location_label];
+}
+
 function Field({ label, value }) {
   return (
     <div className="min-w-0">
@@ -83,6 +89,8 @@ export default function DailyLogSheet({ log, meta, vehicleInfo = {} }) {
   const vehicleNumbers = [vehicleInfo.truckNumber, vehicleInfo.trailerNumber]
     .filter(Boolean)
     .join(" / ");
+  const logDate = new Date(log.date + "T00:00:00");
+  const [fromLoc, toLoc] = fromTo(log);
 
   useEffect(() => {
     const path = pathRef.current;
@@ -126,16 +134,22 @@ export default function DailyLogSheet({ log, meta, vehicleInfo = {} }) {
       </div>
 
       <div className="mb-5 grid grid-cols-2 gap-x-4 gap-y-3 rounded-lg bg-ink-50 p-4 sm:grid-cols-4 print:grid-cols-2">
+        <Field
+          label="Date"
+          value={logDate.toLocaleDateString(undefined, { month: "2-digit", day: "2-digit", year: "numeric" })}
+        />
+        <Field label="From" value={fromLoc} />
+        <Field label="To" value={toLoc} />
         <Field label="Total miles driving today" value={`${(log.total_miles ?? 0).toFixed(1)} mi`} />
-        <Field label="Truck / trailer no." value={vehicleNumbers} />
-        <Field label="Driver" value={vehicleInfo.driverName} />
-        <Field label="Co-driver" value={vehicleInfo.coDriverName} />
         <Field label="Carrier" value={vehicleInfo.carrierName} />
         <Field label="Main office address" value={vehicleInfo.mainOfficeAddress} />
+        <Field label="Truck / trailer no." value={vehicleNumbers} />
         <Field
           label="Shipping doc # / shipper & commodity"
           value={vehicleInfo.shippingDocNumber}
         />
+        <Field label="Driver" value={vehicleInfo.driverName} />
+        <Field label="Co-driver" value={vehicleInfo.coDriverName} />
         <Field label="Driver signature" value={vehicleInfo.driverName ? "(certified above)" : ""} />
       </div>
 
