@@ -3,7 +3,10 @@ import { useState } from "react";
 
 export default function RouteDirections({ legs }) {
   const [open, setOpen] = useState(false);
-  const totalSteps = legs.reduce((sum, leg) => sum + leg.steps.length, 0);
+  // `steps` didn't always exist on stored trip results (older trips predate
+  // turn-by-turn directions) -- default missing ones to empty rather than
+  // crashing when reloading a trip from history.
+  const totalSteps = legs.reduce((sum, leg) => sum + (leg.steps?.length ?? 0), 0);
 
   if (totalSteps === 0) return null;
 
@@ -30,7 +33,7 @@ export default function RouteDirections({ legs }) {
                 {legIdx === 0 ? "Current → Pickup" : "Pickup → Drop-off"}
               </p>
               <ol className="space-y-2">
-                {leg.steps.map((step, i) => (
+                {(leg.steps ?? []).map((step, i) => (
                   <li key={i} className="flex items-start gap-3 text-sm">
                     <span className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-ink-100 text-[10px] font-semibold text-ink-500">
                       {i + 1}

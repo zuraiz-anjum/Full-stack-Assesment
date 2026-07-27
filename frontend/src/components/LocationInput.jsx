@@ -27,7 +27,15 @@ export default function LocationInput({ id, label, placeholder, value, onChange,
 
     if (debounceRef.current) clearTimeout(debounceRef.current);
     debounceRef.current = setTimeout(async () => {
-      const results = await autocompleteLocation(text);
+      let results;
+      try {
+        results = await autocompleteLocation(text);
+      } catch {
+        // Autocomplete is a nice-to-have (typing still works fine without
+        // it) -- a transient network error or hitting the rate limit
+        // shouldn't surface as an unhandled rejection or block typing.
+        return;
+      }
       // Don't reopen the dropdown for a request that resolves after the
       // user has already moved on to another field.
       if (document.activeElement !== inputRef.current) return;

@@ -54,4 +54,22 @@ describe("LocationInput", () => {
     render(<ControlledLocationInput />);
     expect(autocompleteLocation).not.toHaveBeenCalled();
   });
+
+  it("does not throw or crash when the autocomplete request fails (e.g. rate-limited)", async () => {
+    autocompleteLocation.mockRejectedValue(new Error("429 Too Many Requests"));
+    const onUnhandledRejection = vi.fn();
+    window.addEventListener("unhandledrejection", onUnhandledRejection);
+
+    const user = userEvent.setup();
+    render(<ControlledLocationInput />);
+    const input = screen.getByLabelText("Location");
+    await user.type(input, "Chicago");
+
+    // Give the rejected debounce callback a tick to (not) escape.
+    await new Promise((r) => setTimeout(r, 400));
+
+    expect(onUnhandledRejection).not.toHaveBeenCalled();
+    expect(input).toHaveValue("Chicago"); // typing itself still works fine
+    window.removeEventListener("unhandledrejection", onUnhandledRejection);
+  });
 });

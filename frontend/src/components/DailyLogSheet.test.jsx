@@ -74,4 +74,15 @@ describe("DailyLogSheet", () => {
     expect(screen.getByText("Acme Freight LLC")).toBeInTheDocument();
     expect(screen.getByText("John Doe")).toBeInTheDocument();
   });
+
+  it("shows a real ampersand, not a literal '&amp;' string (regression)", () => {
+    const { container } = render(<DailyLogSheet log={SAMPLE_LOG} />);
+    expect(container.textContent).not.toContain("&amp;");
+    expect(container.textContent).toContain("shipper & commodity");
+  });
+
+  it("does not crash when total_miles, blocks, remarks, or totals are missing (older stored trips)", () => {
+    const bareLog = { date: "2026-01-05", day_index: 1 };
+    expect(() => render(<DailyLogSheet log={bareLog} />)).not.toThrow();
+  });
 });

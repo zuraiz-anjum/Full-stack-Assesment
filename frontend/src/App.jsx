@@ -1,23 +1,28 @@
-import { Printer, Truck } from "lucide-react";
-import { lazy, Suspense, useEffect, useRef, useState } from "react";
-import DailyLogSheet from "./components/DailyLogSheet";
-import RouteDirections from "./components/RouteDirections";
-import SummaryCards from "./components/SummaryCards";
+import { AlertTriangle, Truck } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
+import ErrorBoundary from "./components/ErrorBoundary";
 import TripForm from "./components/TripForm";
 import TripHistorySidebar from "./components/TripHistorySidebar";
+import TripResults from "./components/TripResults";
 import { extractErrorMessage, getTrip, listTrips, planTrip } from "./lib/api";
 import { addOwnTripId, getOwnTripIds } from "./lib/ownTrips";
 
-// Leaflet is the single heaviest dependency in the bundle and isn't needed
-// until a trip actually exists — split it into its own chunk so the form
-// (what every visitor sees first, often on mobile) loads and becomes
-// interactive without waiting on map code to parse.
-const MapView = lazy(() => import("./components/MapView"));
-
-function MapSkeleton() {
+function tripResultsFallback(reset) {
   return (
-    <div className="flex h-full w-full items-center justify-center rounded-2xl border border-ink-200 bg-ink-100">
-      <div className="h-6 w-6 animate-spin rounded-full border-2 border-ink-300 border-t-ink-600" />
+    <div className="flex flex-col items-center justify-center gap-3 rounded-2xl border-2 border-dashed border-red-200 bg-red-50 px-6 py-16 text-center">
+      <AlertTriangle className="h-8 w-8 text-red-500" />
+      <h2 className="text-lg font-semibold text-red-800">Couldn't display this trip</h2>
+      <p className="max-w-sm text-sm text-red-600">
+        Something about this trip's data didn't render correctly. Try planning a new trip, or
+        picking a different one from your recent trips.
+      </p>
+      <button
+        type="button"
+        onClick={reset}
+        className="mt-2 rounded-lg bg-ink-900 px-4 py-2 text-sm font-semibold text-white hover:bg-ink-800"
+      >
+        Start over
+      </button>
     </div>
   );
 }
@@ -141,41 +146,13 @@ export default function App() {
             )}
 
             {result && (
-              <>
-                <div className="print-hide space-y-6">
-                  <SummaryCards summary={result.summary} route={result.route} />
-                  <div className="h-[280px] sm:h-[420px]">
-                    <Suspense fallback={<MapSkeleton />}>
-                      <MapView
-                        waypoints={result.waypoints}
-                        geometry={result.route.geometry}
-                        stops={result.stops}
-                      />
-                    </Suspense>
-                  </div>
-                  <RouteDirections legs={result.route.legs} />
-                </div>
-                <div className="space-y-5">
-                  <div className="flex items-center justify-between">
-                    <h2 className="text-base font-semibold text-ink-900">
-                      Daily log sheets ({result.daily_logs.length})
-                    </h2>
-                    <button
-                      type="button"
-                      onClick={() => window.print()}
-                      className="print-hide flex items-center gap-1.5 rounded-lg border border-ink-200 bg-white px-3 py-1.5 text-xs font-medium text-ink-600 shadow-sm transition hover:bg-ink-50"
-                    >
-                      <Printer className="h-3.5 w-3.5" />
-                      Print / Save as PDF
-                    </button>
-                  </div>
-                  {result.daily_logs.map((log) => (
-                    <div key={log.date} className="print-area">
-                      <DailyLogSheet log={log} vehicleInfo={vehicleInfo} />
-                    </div>
-                  ))}
-                </div>
-              </>
+              <ErrorBoundary
+                key={trip?.id}
+                onReset={() => setTrip(null)}
+                fallback={(_error, reset) => tripResultsFallback(reset)}
+              >
+                <TripResults result={result} vehicleInfo={vehicleInfo} />
+              </ErrorBoundary>
             )}
           </section>
         </div>

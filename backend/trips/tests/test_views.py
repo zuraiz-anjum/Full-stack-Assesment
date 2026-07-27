@@ -6,6 +6,7 @@ these never touch the network; that's `test_trip_planner.py`'s job.
 
 from unittest.mock import patch
 
+from django.core.cache import cache
 from rest_framework import status
 from rest_framework.test import APITestCase
 
@@ -131,3 +132,73 @@ class LocationAutocompleteTests(APITestCase):
         resp = self.client.get("/api/locations/autocomplete/", {"q": "Chic"})
         self.assertEqual(resp.status_code, status.HTTP_200_OK)
         self.assertEqual(resp.data, [])
+
+
+class ThrottlingTests(APITestCase):
+    """
+    Verifies the throttle scopes actually engage against the real rates
+    configured in settings.py (20/hour for trip-create, 60/min for
+    autocomplete) -- not just that DEFAULT_THROTTLE_RATES has entries.
+
+    Note: DRF's SimpleRateThrottle reads DEFAULT_THROTTLE_RATES into a
+    class attribute at import time (`THROTTLE_RATES = api_settings.
+    DEFAULT_THROTTLE_RATES`), so @override_settings on REST_FRAMEWORK
+    does NOT affect it mid-test -- these tests exercise the actual
+    configured limits instead of trying to override them.
+    """
+
+    def setUp(self):
+        cache.clear()
+
+    def tearDown(self):
+        cache.clear()
+
+    @patch("trips.views.routing.autocomplete", return_value=[])
+    def test_autocomplete_throttles_after_the_configured_rate(self, mock_autocomplete):
+        from rest_framework.settings import api_settings
+
+        from trips.views import LocationAutocompleteView
+
+        limit = api_settings.DEFAULT_THROTTLE_RATES[LocationAutocompleteView.throttle_scope]
+        num_requests = int(limit.split("/")[0])
+
+        for _ in range(num_requests):
+            resp = self.client.get("/api/locations/autocomplete/", {"q": "test"})
+            self.assertEqual(resp.status_code, status.HTTP_200_OK)
+
+        resp = self.client.get("/api/locations/autocomplete/", {"q": "test"})
+        self.assertEqual(resp.status_code, status.HTTP_429_TOO_MANY_REQUESTS)
+        # DRF's default throttle response shape -- confirms the frontend's
+        # extractErrorMessage() (which reads response.data.detail) will
+        # surface something readable rather than a blank/generic error.
+        self.assertIn("detail", resp.data)
+
+    @patch("trips.views.plan_trip", return_value=FAKE_RESULT)
+    def test_trip_creation_throttles_after_the_configured_rate(self, mock_plan_trip):
+        from rest_framework.settings import api_settings
+
+        limit = api_settings.DEFAULT_THROTTLE_RATES["trip-create"]
+        num_requests = int(limit.split("/")[0])
+
+        for _ in range(num_requests):
+            resp = self.client.post("/api/trips/", VALID_PAYLOAD, format="json")
+            self.assertEqual(resp.status_code, status.HTTP_201_CREATED)
+
+        resp = self.client.post("/api/trips/", VALID_PAYLOAD, format="json")
+        self.assertEqual(resp.status_code, status.HTTP_429_TOO_MANY_REQUESTS)
+
+    def test_get_history_is_never_throttled_even_after_post_throttling_kicks_in(self):
+        from rest_framework.settings import api_settings
+
+        limit = api_settings.DEFAULT_THROTTLE_RATES["trip-create"]
+        num_requests = int(limit.split("/")[0])
+
+        with patch("trips.views.plan_trip", return_value=FAKE_RESULT):
+            for _ in range(num_requests):
+                self.client.post("/api/trips/", VALID_PAYLOAD, format="json")
+            throttled = self.client.post("/api/trips/", VALID_PAYLOAD, format="json")
+        self.assertEqual(throttled.status_code, status.HTTP_429_TOO_MANY_REQUESTS)
+
+        for _ in range(10):
+            resp = self.client.get("/api/trips/")
+            self.assertEqual(resp.status_code, status.HTTP_200_OK)

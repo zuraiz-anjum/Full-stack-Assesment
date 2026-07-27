@@ -98,21 +98,21 @@ export default function DailyLogSheet({ log, meta, vehicleInfo = {} }) {
           {ROWS.map((r) => (
             <span key={r.key} className="flex items-center gap-1.5 text-ink-500">
               <span className="inline-block h-2 w-2 rounded-full" style={{ background: r.color }} />
-              {r.label.replace("\n", " ")}: <strong className="text-ink-800">{(log.totals[r.key] ?? 0).toFixed(2)}h</strong>
+              {r.label.replace("\n", " ")}: <strong className="text-ink-800">{(log.totals?.[r.key] ?? 0).toFixed(2)}h</strong>
             </span>
           ))}
         </div>
       </div>
 
       <div className="mb-5 grid grid-cols-2 gap-x-4 gap-y-3 rounded-lg bg-ink-50 p-4 sm:grid-cols-4 print:grid-cols-2">
-        <Field label="Total miles driving today" value={`${log.total_miles.toFixed(1)} mi`} />
+        <Field label="Total miles driving today" value={`${(log.total_miles ?? 0).toFixed(1)} mi`} />
         <Field label="Truck / trailer no." value={vehicleNumbers} />
         <Field label="Driver" value={vehicleInfo.driverName} />
         <Field label="Co-driver" value={vehicleInfo.coDriverName} />
         <Field label="Carrier" value={vehicleInfo.carrierName} />
         <Field label="Main office address" value={vehicleInfo.mainOfficeAddress} />
         <Field
-          label="Shipping doc # / shipper &amp; commodity"
+          label="Shipping doc # / shipper & commodity"
           value={vehicleInfo.shippingDocNumber}
         />
         <Field label="Driver signature" value={vehicleInfo.driverName ? "(certified above)" : ""} />
@@ -200,7 +200,7 @@ export default function DailyLogSheet({ log, meta, vehicleInfo = {} }) {
                 fontWeight="700"
                 fill={row.color}
               >
-                {(log.totals[row.key] ?? 0).toFixed(2)}
+                {(log.totals?.[row.key] ?? 0).toFixed(2)}
               </text>
             </g>
           ))}
@@ -230,7 +230,7 @@ export default function DailyLogSheet({ log, meta, vehicleInfo = {} }) {
           />
 
           {/* Filled block segments, colored by status */}
-          {log.blocks.map((block, i) => {
+          {(log.blocks ?? []).map((block, i) => {
             const y = yForRow(ROW_INDEX[block.status]);
             const x = xForHour(block.start_hour);
             const w = xForHour(block.end_hour) - x;
@@ -260,7 +260,7 @@ export default function DailyLogSheet({ log, meta, vehicleInfo = {} }) {
             stroke="#cbd6e8"
             strokeWidth={1}
           />
-          {log.remarks.map((r, i) => {
+          {(log.remarks ?? []).map((r, i) => {
             const x = xForHour(r.hour);
             return (
               <g key={i}>
