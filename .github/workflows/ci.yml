@@ -21,6 +21,12 @@ jobs:
           cache-dependency-path: backend/requirements.txt
       - run: pip install -r requirements.txt
       - run: python manage.py test trips
+        env:
+          # DEBUG=False (CI's default, no .env here) turns on SECURE_SSL_REDIRECT,
+          # which 301s Django's plain-HTTP test client on almost every request.
+          # That's a deployment concern already checked against the live server;
+          # tests should run against the app logic, not fight the HTTPS redirect.
+          DEBUG: "True"
 
   frontend:
     runs-on: ubuntu-latest
