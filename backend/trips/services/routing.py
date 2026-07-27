@@ -63,6 +63,27 @@ def geocode(query: str) -> GeocodedPlace:
     return GeocodedPlace(lat=lat, lon=lon, label=label)
 
 
+def autocomplete(query: str, limit: int = 5) -> list[GeocodedPlace]:
+    """Location suggestions for as-you-type search boxes."""
+    if not query or not query.strip():
+        return []
+
+    resp = requests.get(
+        f"{ORS_BASE_URL}/geocode/autocomplete",
+        params={"api_key": _api_key(), "text": query, "size": limit},
+        timeout=REQUEST_TIMEOUT_SECONDS,
+    )
+    if resp.status_code != 200:
+        return []
+
+    places = []
+    for feature in resp.json().get("features", []):
+        lon, lat = feature["geometry"]["coordinates"]
+        label = feature.get("properties", {}).get("label", query)
+        places.append(GeocodedPlace(lat=lat, lon=lon, label=label))
+    return places
+
+
 def reverse_geocode(lat: float, lon: float) -> str:
     """Best-effort place label for a coordinate (used to label ELD stops)."""
     try:

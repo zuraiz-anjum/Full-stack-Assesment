@@ -2,14 +2,28 @@ import logging
 
 from rest_framework import generics, status
 from rest_framework.response import Response
+from rest_framework.views import APIView
 
 from .models import Trip
 from .serializers import TripCreateSerializer, TripDetailSerializer, TripListSerializer
+from .services import routing
 from .services.hos_engine import TripTooLongError
 from .services.routing import RoutingError
 from .services.trip_planner import plan_trip
 
 logger = logging.getLogger(__name__)
+
+
+class LocationAutocompleteView(APIView):
+    def get(self, request):
+        query = request.query_params.get("q", "")
+        try:
+            places = routing.autocomplete(query)
+        except RoutingError:
+            places = []
+        return Response(
+            [{"label": p.label, "lat": p.lat, "lon": p.lon} for p in places]
+        )
 
 
 class TripListCreateView(generics.ListAPIView):
