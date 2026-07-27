@@ -28,6 +28,28 @@ if railway_domain and railway_domain not in ALLOWED_HOSTS:
 
 ORS_API_KEY = os.environ.get("ORS_API_KEY", "")
 
+# Railway terminates TLS at its edge and forwards plain HTTP to this
+# process, telling us the original scheme via X-Forwarded-Proto. Without
+# this, Django thinks every request is insecure -- breaking is_secure()
+# checks and the HSTS header below -- even though the edge already
+# redirects HTTP to HTTPS for us.
+SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
+
+if not DEBUG:
+    # Railway's edge already redirects HTTP -> HTTPS, but SECURE_PROXY_SSL_HEADER
+    # above lets Django recognize that correctly too, so this is safe rather
+    # than redundant risk of a redirect loop.
+    SECURE_SSL_REDIRECT = True
+    SECURE_HSTS_SECONDS = 31536000  # 1 year
+    SECURE_HSTS_INCLUDE_SUBDOMAINS = True
+    SECURE_HSTS_PRELOAD = True
+    SESSION_COOKIE_SECURE = True
+    CSRF_COOKIE_SECURE = True
+
+SECURE_CONTENT_TYPE_NOSNIFF = True
+X_FRAME_OPTIONS = "DENY"
+SECURE_REFERRER_POLICY = "same-origin"
+
 INSTALLED_APPS = [
     "django.contrib.admin",
     "django.contrib.auth",
@@ -111,6 +133,11 @@ REST_FRAMEWORK = {
         "trip-create": "20/hour",
         "autocomplete": "60/minute",
     },
+    # Railway sits as exactly one reverse proxy in front of this app. Without
+    # this, DRF's throttle either keys on Railway's own proxy address (every
+    # visitor sharing one bucket) or trusts an unbounded X-Forwarded-For
+    # chain a client could pad with fake entries to dodge rate limiting.
+    "NUM_PROXIES": 1,
 }
 
 CORS_ALLOWED_ORIGINS = [
