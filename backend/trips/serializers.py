@@ -49,4 +49,22 @@ class TripDetailSerializer(serializers.ModelSerializer):
             "current_cycle_used_hours",
             "result",
             "created_at",
+            "share_token",
+        ]
+
+
+class SharedTripSerializer(serializers.ModelSerializer):
+    """Same trip data as TripDetailSerializer, minus the token itself --
+    whoever has the share link already has it, no reason to echo it back."""
+
+    class Meta:
+        model = Trip
+        fields = [
+            "id",
+            "current_location",
+            "pickup_location",
+            "dropoff_location",
+            "current_cycle_used_hours",
+            "result",
+            "created_at",
         ]

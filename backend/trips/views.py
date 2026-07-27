@@ -7,7 +7,12 @@ from rest_framework.throttling import ScopedRateThrottle
 from rest_framework.views import APIView
 
 from .models import Trip
-from .serializers import TripCreateSerializer, TripDetailSerializer, TripListSerializer
+from .serializers import (
+    SharedTripSerializer,
+    TripCreateSerializer,
+    TripDetailSerializer,
+    TripListSerializer,
+)
 from .services import routing
 from .services.hos_engine import TripTooLongError
 from .services.pdf_builder import build_trip_pdf
@@ -111,6 +116,13 @@ class TripDetailView(generics.RetrieveAPIView):
         return Trip.objects.filter(owner_token=_owner_token(self.request))
 
 
+def _pdf_response(trip: Trip) -> HttpResponse:
+    pdf_bytes = build_trip_pdf(trip.result)
+    response = HttpResponse(pdf_bytes, content_type="application/pdf")
+    response["Content-Disposition"] = f'attachment; filename="trip-{trip.id}-daily-logs.pdf"'
+    return response
+
+
 class TripPdfView(generics.RetrieveAPIView):
     """Streams the trip's daily logs as a real PDF (one page per day),
     laid out like the FMCSA paper form -- an alternative to relying on
@@ -120,8 +132,23 @@ class TripPdfView(generics.RetrieveAPIView):
         return Trip.objects.filter(owner_token=_owner_token(self.request))
 
     def get(self, request, *args, **kwargs):
-        trip = self.get_object()
-        pdf_bytes = build_trip_pdf(trip.result)
-        response = HttpResponse(pdf_bytes, content_type="application/pdf")
-        response["Content-Disposition"] = f'attachment; filename="trip-{trip.id}-daily-logs.pdf"'
-        return response
+        return _pdf_response(self.get_object())
+
+
+class SharedTripDetailView(generics.RetrieveAPIView):
+    """Public, read-only lookup by share_token -- deliberately NOT scoped to
+    an owner token. Knowing the (unguessable, random) token is what grants
+    access, same trust model as the owner token, just meant to be handed to
+    someone else on purpose (e.g. a dispatcher)."""
+
+    queryset = Trip.objects.all()
+    serializer_class = SharedTripSerializer
+    lookup_field = "share_token"
+
+
+class SharedTripPdfView(generics.RetrieveAPIView):
+    queryset = Trip.objects.all()
+    lookup_field = "share_token"
+
+    def get(self, request, *args, **kwargs):
+        return _pdf_response(self.get_object())

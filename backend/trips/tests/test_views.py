@@ -173,6 +173,52 @@ class TripPdfTests(APITestCase):
         self.assertEqual(resp.status_code, status.HTTP_404_NOT_FOUND)
 
 
+class SharedTripTests(APITestCase):
+    """The public share-link endpoints -- deliberately not owner-token
+    scoped, since the whole point is that someone without the owner's
+    token (e.g. a dispatcher who was just sent the link) can view it."""
+
+    def setUp(self):
+        self.trip = Trip.objects.create(
+            current_location="Chicago, IL",
+            pickup_location="Indianapolis, IN",
+            dropoff_location="Nashville, TN",
+            current_cycle_used_hours=10,
+            result=FAKE_RESULT,
+            owner_token="the-actual-owner",
+        )
+
+    def test_shared_detail_works_with_no_owner_token_at_all(self):
+        resp = self.client.get(f"/api/shared/{self.trip.share_token}/")
+        self.assertEqual(resp.status_code, status.HTTP_200_OK)
+        self.assertEqual(resp.data["result"], FAKE_RESULT)
+
+    def test_shared_detail_does_not_echo_the_share_token_back(self):
+        resp = self.client.get(f"/api/shared/{self.trip.share_token}/")
+        self.assertNotIn("share_token", resp.data)
+
+    def test_shared_detail_404s_for_a_random_token(self):
+        resp = self.client.get("/api/shared/00000000-0000-0000-0000-000000000000/")
+        self.assertEqual(resp.status_code, status.HTTP_404_NOT_FOUND)
+
+    def test_shared_pdf_works_with_no_owner_token(self):
+        resp = self.client.get(f"/api/shared/{self.trip.share_token}/pdf/")
+        self.assertEqual(resp.status_code, status.HTTP_200_OK)
+        self.assertEqual(resp["Content-Type"], "application/pdf")
+
+    def test_owner_detail_response_includes_a_share_token_to_hand_out(self):
+        resp = self.client.get(f"/api/trips/{self.trip.id}/", HTTP_X_OWNER_TOKEN="the-actual-owner")
+        self.assertEqual(resp.status_code, status.HTTP_200_OK)
+        self.assertEqual(str(self.trip.share_token), resp.data["share_token"])
+
+    def test_two_trips_never_share_a_token(self):
+        other = Trip.objects.create(
+            current_location="A", pickup_location="B", dropoff_location="C",
+            current_cycle_used_hours=0, result=FAKE_RESULT,
+        )
+        self.assertNotEqual(self.trip.share_token, other.share_token)
+
+
 class LocationAutocompleteTests(APITestCase):
     @patch("trips.views.routing.autocomplete")
     def test_returns_places_from_the_routing_service(self, mock_autocomplete):

@@ -1,4 +1,4 @@
-import { Download, Loader2, Printer } from "lucide-react";
+import { Check, Download, Loader2, Printer, Share2 } from "lucide-react";
 import { lazy, Suspense, useState } from "react";
 import { downloadTripPdf } from "../lib/api";
 import DailyLogSheet from "./DailyLogSheet";
@@ -25,9 +25,21 @@ function MapSkeleton() {
 // their descendants, never by their own parent's render — so if a stored
 // trip has an unexpected/missing shape, the crash needs to happen in here
 // (a child of the boundary App wraps this in) to actually be caught.
-export default function TripResults({ result, vehicleInfo, tripId }) {
+export default function TripResults({ result, vehicleInfo, tripId, shareToken }) {
   const [downloading, setDownloading] = useState(false);
   const [downloadError, setDownloadError] = useState("");
+  const [copied, setCopied] = useState(false);
+
+  async function handleShare() {
+    const url = `${window.location.origin}/shared/${shareToken}`;
+    try {
+      await navigator.clipboard.writeText(url);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch {
+      window.prompt("Copy this link to share the trip:", url);
+    }
+  }
 
   async function handleDownloadPdf() {
     setDownloading(true);
@@ -66,6 +78,20 @@ export default function TripResults({ result, vehicleInfo, tripId }) {
             Daily log sheets ({result.daily_logs.length})
           </h2>
           <div className="print-hide flex items-center gap-2">
+            {shareToken && (
+              <button
+                type="button"
+                onClick={handleShare}
+                className="flex items-center gap-1.5 rounded-lg border border-ink-200 bg-white px-3 py-1.5 text-xs font-medium text-ink-600 shadow-sm transition hover:bg-ink-50"
+              >
+                {copied ? (
+                  <Check className="h-3.5 w-3.5 text-green-600" />
+                ) : (
+                  <Share2 className="h-3.5 w-3.5" />
+                )}
+                {copied ? "Link copied" : "Share"}
+              </button>
+            )}
             {tripId && (
               <button
                 type="button"

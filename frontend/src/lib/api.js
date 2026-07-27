@@ -54,6 +54,15 @@ export async function downloadTripPdf(id) {
   return data;
 }
 
+export async function getSharedTrip(shareToken) {
+  const { data } = await client.get(`/shared/${shareToken}/`);
+  return data;
+}
+
+export function sharedTripPdfUrl(shareToken) {
+  return `${BASE_URL}/shared/${shareToken}/pdf/`;
+}
+
 export async function autocompleteLocation(query) {
   if (!query || query.trim().length < 2) return [];
   const { data } = await client.get("/locations/autocomplete/", { params: { q: query } });

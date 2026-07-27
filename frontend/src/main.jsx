@@ -2,7 +2,14 @@ import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import App from './App.jsx'
 import ErrorBoundary from './components/ErrorBoundary.jsx'
+import SharedTripPage from './components/SharedTripPage.jsx'
 import './index.css'
+
+// No client-side router for one extra screen -- a shared trip link is just
+// a path of the form /shared/<uuid>, checked once at load time.
+const sharedMatch = window.location.pathname.match(
+  /^\/shared\/([0-9a-f-]{36})\/?$/i,
+)
 
 function rootFallback() {
   return (
@@ -25,7 +32,7 @@ function rootFallback() {
 createRoot(document.getElementById('root')).render(
   <StrictMode>
     <ErrorBoundary fallback={rootFallback}>
-      <App />
+      {sharedMatch ? <SharedTripPage shareToken={sharedMatch[1]} /> : <App />}
     </ErrorBoundary>
   </StrictMode>,
 )
