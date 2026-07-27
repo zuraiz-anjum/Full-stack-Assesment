@@ -7,6 +7,7 @@ import SummaryCards from "./components/SummaryCards";
 import TripForm from "./components/TripForm";
 import TripHistorySidebar from "./components/TripHistorySidebar";
 import { extractErrorMessage, getTrip, listTrips, planTrip } from "./lib/api";
+import { addOwnTripId, getOwnTripIds } from "./lib/ownTrips";
 
 export default function App() {
   const [trip, setTrip] = useState(null);
@@ -23,7 +24,8 @@ export default function App() {
     try {
       setHistoryLoading(true);
       const trips = await listTrips();
-      setHistory(trips);
+      const ownIds = getOwnTripIds();
+      setHistory(trips.filter((t) => ownIds.has(t.id)));
     } catch {
       // History is a nice-to-have; a failed fetch shouldn't block the app.
     } finally {
@@ -36,6 +38,7 @@ export default function App() {
     setError("");
     try {
       const created = await planTrip(formValues);
+      addOwnTripId(created.id);
       setTrip(created);
       refreshHistory();
     } catch (err) {
