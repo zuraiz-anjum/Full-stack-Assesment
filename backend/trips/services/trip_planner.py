@@ -151,6 +151,14 @@ def _build_result_dict(
                 "distance_miles": round(route.distance_miles, 2),
                 "duration_hours": round(route.duration_hours, 3),
                 "geometry": geometry,
+                "steps": [
+                    {
+                        "instruction": s.instruction,
+                        "distance_miles": round(s.distance_miles, 2),
+                        "duration_hours": round(s.duration_hours, 3),
+                    }
+                    for s in route.steps
+                ],
             }
         )
         combined_geometry.extend(geometry)

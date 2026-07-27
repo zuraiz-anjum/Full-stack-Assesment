@@ -2,6 +2,7 @@ import { Truck } from "lucide-react";
 import { useEffect, useState } from "react";
 import DailyLogSheet from "./components/DailyLogSheet";
 import MapView from "./components/MapView";
+import RouteDirections from "./components/RouteDirections";
 import SummaryCards from "./components/SummaryCards";
 import TripForm from "./components/TripForm";
 import TripHistorySidebar from "./components/TripHistorySidebar";
@@ -122,6 +123,7 @@ export default function App() {
                     stops={result.stops}
                   />
                 </div>
+                <RouteDirections legs={result.route.legs} />
                 <div className="space-y-5">
                   <h2 className="text-base font-semibold text-ink-900">
                     Daily log sheets ({result.daily_logs.length})

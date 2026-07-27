@@ -27,11 +27,19 @@ class GeocodedPlace:
 
 
 @dataclass
+class RouteStep:
+    instruction: str
+    distance_miles: float
+    duration_hours: float
+
+
+@dataclass
 class RouteResult:
     distance_miles: float
     duration_hours: float
     # Polyline as a list of (lat, lon) points, in travel order.
     geometry: list[tuple[float, float]]
+    steps: list[RouteStep]
 
 
 def _api_key() -> str:
@@ -111,7 +119,10 @@ def get_route(start: GeocodedPlace, end: GeocodedPlace) -> RouteResult:
     resp = requests.post(
         f"{ORS_BASE_URL}/v2/directions/driving-hgv/geojson",
         headers={"Authorization": _api_key(), "Content-Type": "application/json"},
-        json={"coordinates": [[start.lon, start.lat], [end.lon, end.lat]]},
+        json={
+            "coordinates": [[start.lon, start.lat], [end.lon, end.lat]],
+            "instructions": True,
+        },
         timeout=REQUEST_TIMEOUT_SECONDS,
     )
     if resp.status_code != 200:
@@ -132,9 +143,23 @@ def get_route(start: GeocodedPlace, end: GeocodedPlace) -> RouteResult:
     feature = features[0]
     summary = feature["properties"]["summary"]
     coords = feature["geometry"]["coordinates"]  # [lon, lat] pairs
+    raw_steps = feature["properties"].get("segments", [{}])[0].get("steps", [])
+
+    steps = [
+        RouteStep(
+            instruction=s["instruction"],
+            distance_miles=s["distance"] / METERS_PER_MILE,
+            duration_hours=s["duration"] / 3600.0,
+        )
+        for s in raw_steps
+        # ORS emits a few zero-distance "arrive"/"depart" bookkeeping steps;
+        # keep the real ones plus the final arrival message.
+        if s["distance"] > 0 or s is raw_steps[-1]
+    ]
 
     return RouteResult(
         distance_miles=summary["distance"] / METERS_PER_MILE,
         duration_hours=summary["duration"] / 3600.0,
         geometry=[(lat, lon) for lon, lat in coords],
+        steps=steps,
     )
