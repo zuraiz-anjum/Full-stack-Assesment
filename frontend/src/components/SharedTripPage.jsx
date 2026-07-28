@@ -82,7 +82,7 @@ function SharedTripContent({ trip }) {
             </a>
           </div>
         </div>
-        <p className="text-xs text-ink-500 dark:text-ink-400">
+        <p className="text-xs font-semibold text-ink-500 dark:text-ink-400">
           The downloaded PDF has the exact format required.
         </p>
         {result.daily_logs.map((log) => (

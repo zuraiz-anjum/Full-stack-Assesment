@@ -1,16 +1,67 @@
 import { MapPin, MoveHorizontal } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
+import { useTheme } from "../lib/ThemeContext";
 
 const REDUCED_MOTION =
   typeof window !== "undefined" && window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
 
 const ROWS = [
-  { key: "OFF_DUTY", label: "1. Off Duty", color: "#a8a89c" },
-  { key: "SLEEPER_BERTH", label: "2. Sleeper Berth", color: "#6d5ce8" },
-  { key: "DRIVING", label: "3. Driving", color: "#1a7a3e" },
-  { key: "ON_DUTY_NOT_DRIVING", label: "4. On Duty\n(Not Driving)", color: "#b45309" },
+  { key: "OFF_DUTY", label: "1. Off Duty" },
+  { key: "SLEEPER_BERTH", label: "2. Sleeper Berth" },
+  { key: "DRIVING", label: "3. Driving" },
+  { key: "ON_DUTY_NOT_DRIVING", label: "4. On Duty\n(Not Driving)" },
 ];
 const ROW_INDEX = Object.fromEntries(ROWS.map((r, i) => [r.key, i]));
+
+// The grid is hand-built SVG, not Tailwind classes, so it can't pick up
+// `dark:` variants for free -- without this, every fill/stroke stayed
+// tuned for a light background and things like the row labels and remark
+// text (both near-black) went almost invisible against the dark card.
+const ROW_COLORS = {
+  light: {
+    OFF_DUTY: "#a8a89c",
+    SLEEPER_BERTH: "#6d5ce8",
+    DRIVING: "#1a7a3e",
+    ON_DUTY_NOT_DRIVING: "#b45309",
+  },
+  dark: {
+    OFF_DUTY: "#c2c2b6",
+    SLEEPER_BERTH: "#a396ff",
+    DRIVING: "#3ecb72",
+    ON_DUTY_NOT_DRIVING: "#f0a339",
+  },
+};
+
+const CHART_PALETTE = {
+  light: {
+    axisText: "#6b6b61",
+    gridFaint: "#efeee7",
+    gridHour: "#b8b8ac",
+    gridHeavy: "#40403a",
+    divider: "#e2e0d8",
+    rowLabel: "#18180f",
+    bandEven: "#faf9f6",
+    bandOdd: "#ffffff",
+    stepTrace: "#0a0a08",
+    remarkAccent: "#b45309",
+    remarkTextActive: "#18180f",
+    remarkTextInactive: "#40403a",
+  },
+  dark: {
+    axisText: "#8c8c80",
+    gridFaint: "#232320",
+    gridHour: "#40403a",
+    gridHeavy: "#8c8c80",
+    divider: "#33332c",
+    rowLabel: "#faf9f6",
+    bandEven: "#1a1a15",
+    bandOdd: "#121210",
+    stepTrace: "#faf9f6",
+    remarkAccent: "#fbbf24",
+    remarkTextActive: "#faf9f6",
+    remarkTextInactive: "#b8b8ac",
+  },
+};
 
 const GRID_X = 168;
 const GRID_WIDTH = 792; // 24 * 33
@@ -91,6 +142,9 @@ function RecapField({ label, value }) {
 }
 
 export default function DailyLogSheet({ log, meta, vehicleInfo = {}, onHighlightLocation }) {
+  const { theme } = useTheme();
+  const rowColors = ROW_COLORS[theme === "dark" ? "dark" : "light"];
+  const palette = CHART_PALETTE[theme === "dark" ? "dark" : "light"];
   const stepPath = buildStepPath(log.blocks);
   const pathRef = useRef(null);
   const vehicleNumbers = [vehicleInfo.truckNumber, vehicleInfo.trailerNumber]
@@ -153,7 +207,7 @@ export default function DailyLogSheet({ log, meta, vehicleInfo = {}, onHighlight
         <div className="flex flex-wrap gap-3 text-xs">
           {ROWS.map((r) => (
             <span key={r.key} className="flex items-center gap-1.5 text-ink-500 dark:text-ink-400">
-              <span className="inline-block h-2 w-2 rounded-full" style={{ background: r.color }} />
+              <span className="inline-block h-2 w-2 rounded-full" style={{ background: rowColors[r.key] }} />
               {r.label.replace("\n", " ")}: <strong className="text-ink-900 dark:text-ink-100">{(log.totals?.[r.key] ?? 0).toFixed(2)}h</strong>
             </span>
           ))}
@@ -211,7 +265,7 @@ export default function DailyLogSheet({ log, meta, vehicleInfo = {}, onHighlight
               y={GRID_TOP - 10}
               fontSize="9"
               textAnchor="middle"
-              fill="#6b6b61"
+              fill={palette.axisText}
             >
               {hourLabel(h)}
             </text>
@@ -230,7 +284,7 @@ export default function DailyLogSheet({ log, meta, vehicleInfo = {}, onHighlight
                 y1={GRID_TOP}
                 x2={x}
                 y2={GRID_TOP + GRID_HEIGHT}
-                stroke={isSix ? "#40403a" : isHour ? "#b8b8ac" : "#efeee7"}
+                stroke={isSix ? palette.gridHeavy : isHour ? palette.gridHour : palette.gridFaint}
                 strokeWidth={isSix ? 1.4 : isHour ? 1 : 0.6}
               />
             );
@@ -244,14 +298,14 @@ export default function DailyLogSheet({ log, meta, vehicleInfo = {}, onHighlight
                 y={GRID_TOP + i * ROW_HEIGHT}
                 width={GRID_WIDTH}
                 height={ROW_HEIGHT}
-                fill={i % 2 === 0 ? "#faf9f6" : "#ffffff"}
+                fill={i % 2 === 0 ? palette.bandEven : palette.bandOdd}
               />
               <line
                 x1={GRID_X}
                 y1={GRID_TOP + i * ROW_HEIGHT}
                 x2={GRID_X + GRID_WIDTH}
                 y2={GRID_TOP + i * ROW_HEIGHT}
-                stroke="#e2e0d8"
+                stroke={palette.divider}
                 strokeWidth={1}
               />
               {row.label.split("\n").map((line, li) => (
@@ -262,7 +316,7 @@ export default function DailyLogSheet({ log, meta, vehicleInfo = {}, onHighlight
                   fontSize="11"
                   fontWeight="600"
                   textAnchor="end"
-                  fill="#18180f"
+                  fill={palette.rowLabel}
                 >
                   {line}
                 </text>
@@ -272,7 +326,7 @@ export default function DailyLogSheet({ log, meta, vehicleInfo = {}, onHighlight
                 y={GRID_TOP + i * ROW_HEIGHT + ROW_HEIGHT / 2 + 4}
                 fontSize="12"
                 fontWeight="700"
-                fill={row.color}
+                fill={rowColors[row.key]}
               >
                 {(log.totals?.[row.key] ?? 0).toFixed(2)}
               </text>
@@ -283,7 +337,7 @@ export default function DailyLogSheet({ log, meta, vehicleInfo = {}, onHighlight
             y1={GRID_TOP + GRID_HEIGHT}
             x2={GRID_X + GRID_WIDTH}
             y2={GRID_TOP + GRID_HEIGHT}
-            stroke="#40403a"
+            stroke={palette.gridHeavy}
             strokeWidth={1.4}
           />
           <line
@@ -291,7 +345,7 @@ export default function DailyLogSheet({ log, meta, vehicleInfo = {}, onHighlight
             y1={GRID_TOP}
             x2={GRID_X}
             y2={GRID_TOP + GRID_HEIGHT}
-            stroke="#40403a"
+            stroke={palette.gridHeavy}
             strokeWidth={1.4}
           />
           <line
@@ -299,7 +353,7 @@ export default function DailyLogSheet({ log, meta, vehicleInfo = {}, onHighlight
             y1={GRID_TOP}
             x2={GRID_X + GRID_WIDTH}
             y2={GRID_TOP + GRID_HEIGHT}
-            stroke="#40403a"
+            stroke={palette.gridHeavy}
             strokeWidth={1.4}
           />
 
@@ -308,7 +362,7 @@ export default function DailyLogSheet({ log, meta, vehicleInfo = {}, onHighlight
             const y = yForRow(ROW_INDEX[block.status]);
             const x = xForHour(block.start_hour);
             const w = xForHour(block.end_hour) - x;
-            const color = ROWS[ROW_INDEX[block.status]].color;
+            const color = rowColors[block.status];
             return (
               <rect
                 key={i}
@@ -323,7 +377,7 @@ export default function DailyLogSheet({ log, meta, vehicleInfo = {}, onHighlight
           })}
 
           {/* Bold step trace */}
-          <path ref={pathRef} d={stepPath} fill="none" stroke="#0a0a08" strokeWidth={2.25} strokeLinejoin="round" />
+          <path ref={pathRef} d={stepPath} fill="none" stroke={palette.stepTrace} strokeWidth={2.25} strokeLinejoin="round" />
 
           {/* Remarks track */}
           <line
@@ -331,7 +385,7 @@ export default function DailyLogSheet({ log, meta, vehicleInfo = {}, onHighlight
             y1={REMARKS_TOP}
             x2={GRID_X + GRID_WIDTH}
             y2={REMARKS_TOP}
-            stroke="#e2e0d8"
+            stroke={palette.divider}
             strokeWidth={1}
           />
           {(log.remarks ?? []).map((r, i) => {
@@ -362,7 +416,7 @@ export default function DailyLogSheet({ log, meta, vehicleInfo = {}, onHighlight
                   y1={GRID_TOP}
                   x2={x}
                   y2={REMARKS_TOP + 4}
-                  stroke="#b45309"
+                  stroke={palette.remarkAccent}
                   strokeDasharray={active ? "0" : "2 2"}
                   strokeWidth={active ? 1.75 : 1}
                 />
@@ -370,15 +424,15 @@ export default function DailyLogSheet({ log, meta, vehicleInfo = {}, onHighlight
                     while the visible dot stays small and unobtrusive. */}
                 <circle cx={x} cy={REMARKS_TOP} r={12} fill="transparent" />
                 {active && (
-                  <circle cx={x} cy={REMARKS_TOP} r={7} fill="#b45309" opacity={0.18} />
+                  <circle cx={x} cy={REMARKS_TOP} r={7} fill={palette.remarkAccent} opacity={0.18} />
                 )}
-                <circle cx={x} cy={REMARKS_TOP} r={active ? 4 : 2.5} fill="#b45309" />
+                <circle cx={x} cy={REMARKS_TOP} r={active ? 4 : 2.5} fill={palette.remarkAccent} />
                 <text
                   x={x + 4}
                   y={REMARKS_TOP + 12}
                   fontSize="9.5"
                   fontWeight={active ? 700 : 400}
-                  fill={active ? "#18180f" : "#40403a"}
+                  fill={active ? palette.remarkTextActive : palette.remarkTextInactive}
                   transform={`rotate(38 ${x + 4} ${REMARKS_TOP + 12})`}
                 >
                   {formatClock(r.hour)} &middot; {r.location_label || r.activity_label}
