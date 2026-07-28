@@ -96,6 +96,7 @@ export default function App() {
   const vehicleInfo = vi && {
     carrierName: vi.carrier_name,
     mainOfficeAddress: vi.main_office_address,
+    homeTerminalAddress: vi.home_terminal_address,
     truckNumber: vi.truck_number,
     trailerNumber: vi.trailer_number,
     driverName: vi.driver_name,

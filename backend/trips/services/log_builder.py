@@ -9,7 +9,7 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta
 
-from trips.services.hos_engine import DutySegment, DutyStatus
+from trips.services.hos_engine import DutySegment, DutyStatus, RESTART_LABEL
 
 ALL_STATUSES = [
     DutyStatus.OFF_DUTY,
@@ -41,14 +41,33 @@ class DailyLog:
     totals: dict = field(default_factory=dict)
     remarks: list[Remark] = field(default_factory=list)
     total_miles: float = 0.0
+    # Where the truck was at the start/end of this calendar day, for the
+    # paper form's From/To boxes. On a day with no status changes at all
+    # (e.g. the middle day of a multi-day 34-hour restart), there's no
+    # remark to read a location from, so this carries forward the last
+    # known location instead of leaving it blank -- the truck didn't teleport
+    # away, it's still sitting wherever it stopped.
+    from_location: str = ""
+    to_location: str = ""
+    # Hours on duty (driving + on-duty-not-driving) since the last 34-hour
+    # restart, including today -- the same number the 70-hour/8-day cycle
+    # limit is checked against, and what the paper form's recap box "A"
+    # line asks for.
+    cycle_hours_used: float = 0.0
 
 
 def _hours_between(a: datetime, b: datetime) -> float:
     return (b - a).total_seconds() / 3600.0
 
 
-def build_daily_logs(segments: list[DutySegment]) -> list[DailyLog]:
-    """`segments` must be contiguous and chronological (as produced by simulate_trip)."""
+def build_daily_logs(segments: list[DutySegment], current_cycle_used_hours: float = 0.0) -> list[DailyLog]:
+    """`segments` must be contiguous and chronological (as produced by simulate_trip).
+
+    `current_cycle_used_hours` seeds the running on-duty counter used for
+    each day's recap "hours on duty since last reset" figure -- the same
+    starting value the HOS engine itself was simulated with, so this stays
+    consistent with whatever 34-hour restarts the engine actually inserted.
+    """
     if not segments:
         return []
 
@@ -58,6 +77,8 @@ def build_daily_logs(segments: list[DutySegment]) -> list[DailyLog]:
     logs: list[DailyLog] = []
     day_index = 1
     current_date = trip_start_date
+    last_known_location = ""
+    cycle_used = current_cycle_used_hours
 
     while current_date <= trip_end_date:
         day_start = datetime.combine(current_date, datetime.min.time())
@@ -96,6 +117,11 @@ def build_daily_logs(segments: list[DutySegment]) -> list[DailyLog]:
                 clipped_fraction = (end_hour - start_hour) / seg.duration_hours
                 total_miles += seg.miles * clipped_fraction
 
+            if seg.status in (DutyStatus.DRIVING, DutyStatus.ON_DUTY_NOT_DRIVING):
+                cycle_used += end_hour - start_hour
+            elif seg.label == RESTART_LABEL:
+                cycle_used = 0.0
+
             if clip_start == seg.start:
                 location = getattr(seg, "resolved_location", None)
                 location_label = location["label"] if location else ""
@@ -114,6 +140,15 @@ def build_daily_logs(segments: list[DutySegment]) -> list[DailyLog]:
 
         _normalize_totals(totals)
 
+        located = [r for r in remarks if r.location_label]
+        if located:
+            from_location = located[0].location_label
+            to_location = located[-1].location_label
+            last_known_location = to_location
+        else:
+            from_location = last_known_location
+            to_location = last_known_location
+
         logs.append(
             DailyLog(
                 date=current_date.isoformat(),
@@ -122,6 +157,9 @@ def build_daily_logs(segments: list[DutySegment]) -> list[DailyLog]:
                 totals=totals,
                 remarks=remarks,
                 total_miles=round(total_miles, 1),
+                from_location=from_location,
+                to_location=to_location,
+                cycle_hours_used=round(cycle_used, 2),
             )
         )
 

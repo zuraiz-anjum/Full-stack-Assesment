@@ -49,6 +49,12 @@ FUEL_INTERVAL_MILES = 1000.0
 FUEL_STOP_DURATION = 0.5
 PICKUP_DROPOFF_DURATION = 1.0
 
+# Exported so log_builder can recognize a restart segment by label (it needs
+# to replay the same cycle_used reset log_builder does, to fill in the daily
+# log's "hours on duty, last 8 days" recap box) without duplicating the
+# string literal.
+RESTART_LABEL = "34-hour restart (70-hour/8-day cycle reset)"
+
 EPSILON = 1e-6
 MAX_ITERATIONS = 5000
 
@@ -156,7 +162,7 @@ def simulate_trip(
             _append(
                 DutyStatus.SLEEPER_BERTH,
                 RESTART_HOURS,
-                "34-hour restart (70-hour/8-day cycle reset)",
+                RESTART_LABEL,
                 leg_name=here_leg,
                 leg_progress_fraction=here_fraction,
             )

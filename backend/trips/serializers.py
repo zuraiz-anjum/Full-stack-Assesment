@@ -16,6 +16,9 @@ class TripCreateSerializer(serializers.Serializer):
     main_office_address = serializers.CharField(
         max_length=255, required=False, allow_blank=True, default=""
     )
+    home_terminal_address = serializers.CharField(
+        max_length=255, required=False, allow_blank=True, default=""
+    )
     truck_number = serializers.CharField(max_length=100, required=False, allow_blank=True, default="")
     trailer_number = serializers.CharField(max_length=100, required=False, allow_blank=True, default="")
     driver_name = serializers.CharField(max_length=255, required=False, allow_blank=True, default="")

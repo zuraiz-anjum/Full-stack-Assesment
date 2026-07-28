@@ -9,6 +9,7 @@ const DEFAULTS = {
   currentCycleUsedHours: "",
   carrierName: "",
   mainOfficeAddress: "",
+  homeTerminalAddress: "",
   truckNumber: "",
   trailerNumber: "",
   driverName: "",
@@ -21,6 +22,7 @@ const VEHICLE_FIELDS = [
   { key: "coDriverName", label: "Co-driver name", placeholder: "Optional" },
   { key: "carrierName", label: "Carrier name", placeholder: "e.g. Acme Freight LLC" },
   { key: "mainOfficeAddress", label: "Main office address", placeholder: "City, State" },
+  { key: "homeTerminalAddress", label: "Home terminal address", placeholder: "City, State" },
   { key: "truckNumber", label: "Truck/tractor number", placeholder: "e.g. T-4471" },
   { key: "trailerNumber", label: "Trailer number", placeholder: "e.g. TR-2209" },
   {
@@ -47,6 +49,7 @@ export default function TripForm({ onSubmit, submitting, errorMessage }) {
       currentCycleUsedHours: Number(form.currentCycleUsedHours),
       carrierName: form.carrierName,
       mainOfficeAddress: form.mainOfficeAddress,
+      homeTerminalAddress: form.homeTerminalAddress,
       truckNumber: form.truckNumber,
       trailerNumber: form.trailerNumber,
       driverName: form.driverName,

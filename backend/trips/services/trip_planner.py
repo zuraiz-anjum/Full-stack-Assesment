@@ -23,6 +23,7 @@ LEG_PICKUP_TO_DROPOFF = "pickup -> dropoff"
 DEFAULT_VEHICLE_INFO = {
     "carrier_name": "",
     "main_office_address": "",
+    "home_terminal_address": "",
     "truck_number": "",
     "trailer_number": "",
     "driver_name": "",
@@ -67,7 +68,7 @@ def plan_trip(
     }
     _resolve_segment_locations(segments, leg_lookup)
 
-    daily_logs = build_daily_logs(segments)
+    daily_logs = build_daily_logs(segments, current_cycle_used_hours)
 
     return _build_result_dict(
         current=current,
@@ -213,6 +214,9 @@ def _build_result_dict(
                 "date": log.date,
                 "day_index": log.day_index,
                 "total_miles": log.total_miles,
+                "from_location": log.from_location,
+                "to_location": log.to_location,
+                "cycle_hours_used": log.cycle_hours_used,
                 "totals": {status.value: hours for status, hours in log.totals.items()},
                 "blocks": [
                     {

@@ -1,11 +1,12 @@
 from unittest import TestCase
 
-from trips.services.pdf_builder import _from_to, build_trip_pdf
+from trips.services.pdf_builder import build_trip_pdf
 
 BASE_RESULT = {
     "vehicle_info": {
         "carrier_name": "Acme Freight LLC",
         "main_office_address": "1 Main St, Chicago, IL",
+        "home_terminal_address": "1 Main St, Chicago, IL",
         "truck_number": "T-1",
         "trailer_number": "TR-1",
         "driver_name": "Jane Doe",
@@ -17,6 +18,9 @@ BASE_RESULT = {
             "date": "2026-01-05",
             "day_index": 1,
             "total_miles": 310.5,
+            "from_location": "Chicago, IL, USA",
+            "to_location": "Indianapolis, IN, USA",
+            "cycle_hours_used": 25.0,
             "totals": {
                 "OFF_DUTY": 10.0,
                 "SLEEPER_BERTH": 0.0,
@@ -61,6 +65,15 @@ class BuildTripPdfTests(TestCase):
         pdf_bytes = build_trip_pdf(result)
         self.assertEqual(pdf_bytes[:4], b"%PDF")
 
+    def test_handles_missing_cycle_hours_used(self):
+        # Older stored trips predate the recap box -- shouldn't crash, and
+        # the recap's A/B fields should render as blank rather than "0.00".
+        log = {**BASE_RESULT["daily_logs"][0]}
+        del log["cycle_hours_used"]
+        result = {"vehicle_info": {}, "daily_logs": [log]}
+        pdf_bytes = build_trip_pdf(result)
+        self.assertEqual(pdf_bytes[:4], b"%PDF")
+
     def test_handles_very_long_field_values_without_crashing(self):
         result = {
             "vehicle_info": {**BASE_RESULT["vehicle_info"], "carrier_name": "A" * 300},
@@ -77,20 +90,18 @@ class BuildTripPdfTests(TestCase):
         pdf_bytes = build_trip_pdf(result)
         self.assertEqual(pdf_bytes[:4], b"%PDF")
 
-
-class FromToTests(TestCase):
-    def test_uses_first_and_last_located_remark(self):
-        log = BASE_RESULT["daily_logs"][0]
-        self.assertEqual(_from_to(log), ("Chicago, IL, USA", "Indianapolis, IN, USA"))
-
-    def test_single_remark_is_both_from_and_to(self):
-        log = {"remarks": [{"hour": 5.0, "location_label": "Nashville, TN, USA"}]}
-        self.assertEqual(_from_to(log), ("Nashville, TN, USA", "Nashville, TN, USA"))
-
-    def test_no_located_remarks_falls_back_to_dashes(self):
-        self.assertEqual(_from_to({"remarks": []}), ("—", "—"))
-        self.assertEqual(_from_to({}), ("—", "—"))
-        self.assertEqual(
-            _from_to({"remarks": [{"hour": 1.0, "activity_label": "no location on this one"}]}),
-            ("—", "—"),
-        )
+    def test_handles_many_remarks_without_running_off_the_page(self):
+        # A busy day (lots of fuel/rest/break stops) pushes the shipping
+        # docs / recap / certification blocks further down the page --
+        # make sure that still produces a valid PDF rather than negative
+        # coordinates or an exception.
+        many_remarks = [
+            {"hour": float(h), "location_label": f"Place {h}, USA", "activity_label": "Driving"}
+            for h in range(20)
+        ]
+        result = {
+            "vehicle_info": BASE_RESULT["vehicle_info"],
+            "daily_logs": [{**BASE_RESULT["daily_logs"][0], "remarks": many_remarks}],
+        }
+        pdf_bytes = build_trip_pdf(result)
+        self.assertEqual(pdf_bytes[:4], b"%PDF")

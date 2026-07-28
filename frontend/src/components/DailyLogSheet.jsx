@@ -5,10 +5,10 @@ const REDUCED_MOTION =
   typeof window !== "undefined" && window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
 
 const ROWS = [
-  { key: "OFF_DUTY", label: "Off Duty", color: "#a8a89c" },
-  { key: "SLEEPER_BERTH", label: "Sleeper Berth", color: "#6d5ce8" },
-  { key: "DRIVING", label: "Driving", color: "#1a7a3e" },
-  { key: "ON_DUTY_NOT_DRIVING", label: "On Duty\n(Not Driving)", color: "#b45309" },
+  { key: "OFF_DUTY", label: "1. Off Duty", color: "#a8a89c" },
+  { key: "SLEEPER_BERTH", label: "2. Sleeper Berth", color: "#6d5ce8" },
+  { key: "DRIVING", label: "3. Driving", color: "#1a7a3e" },
+  { key: "ON_DUTY_NOT_DRIVING", label: "4. On Duty\n(Not Driving)", color: "#b45309" },
 ];
 const ROW_INDEX = Object.fromEntries(ROWS.map((r, i) => [r.key, i]));
 
@@ -66,18 +66,25 @@ function buildStepPath(blocks) {
   return "M " + points.map(([x, y]) => `${x.toFixed(1)},${y.toFixed(1)}`).join(" L ");
 }
 
-function fromTo(log) {
-  const located = (log.remarks ?? []).filter((r) => r.location_label);
-  if (located.length === 0) return ["", ""];
-  return [located[0].location_label, located[located.length - 1].location_label];
-}
-
 function Field({ label, value }) {
   return (
     <div className="min-w-0">
       <p className="text-[10px] tracking-wide text-ink-500 uppercase dark:text-ink-400">{label}</p>
       <p className="truncate border-b border-ink-200 pb-1 text-sm text-ink-800 dark:border-ink-700 dark:text-ink-200">
         {value || <span className="text-ink-300 dark:text-ink-600">&mdash;</span>}
+      </p>
+    </div>
+  );
+}
+
+function RecapField({ label, value }) {
+  return (
+    <div className="min-w-0">
+      <p className="text-[10px] leading-tight text-ink-500 dark:text-ink-400">{label}</p>
+      <p
+        className={`text-sm font-bold ${value != null ? "text-ink-900 dark:text-ink-50" : "text-ink-300 dark:text-ink-600"}`}
+      >
+        {value != null ? `${value.toFixed(2)}h` : "—"}
       </p>
     </div>
   );
@@ -90,7 +97,9 @@ export default function DailyLogSheet({ log, meta, vehicleInfo = {}, onHighlight
     .filter(Boolean)
     .join(" / ");
   const logDate = new Date(log.date + "T00:00:00");
-  const [fromLoc, toLoc] = fromTo(log);
+  const onDutyToday = (log.totals?.DRIVING ?? 0) + (log.totals?.ON_DUTY_NOT_DRIVING ?? 0);
+  const cycleUsed = log.cycle_hours_used;
+  const hoursAvailable = cycleUsed != null ? Math.max(0, 70 - cycleUsed) : null;
 
   // Hovering a remark (mouse) previews it; clicking/tapping pins it -- pinning
   // is what makes this usable on touch devices, which never fire hover.
@@ -156,19 +165,16 @@ export default function DailyLogSheet({ log, meta, vehicleInfo = {}, onHighlight
           label="Date"
           value={logDate.toLocaleDateString(undefined, { month: "2-digit", day: "2-digit", year: "numeric" })}
         />
-        <Field label="From" value={fromLoc} />
-        <Field label="To" value={toLoc} />
+        <Field label="From" value={log.from_location} />
+        <Field label="To" value={log.to_location} />
         <Field label="Total miles driving today" value={`${(log.total_miles ?? 0).toFixed(1)} mi`} />
-        <Field label="Carrier" value={vehicleInfo.carrierName} />
+        <Field label="Total mileage today" value={`${(log.total_miles ?? 0).toFixed(1)} mi`} />
+        <Field label="Name of carrier or carriers" value={vehicleInfo.carrierName} />
+        <Field label="Truck/tractor and trailer no." value={vehicleNumbers} />
         <Field label="Main office address" value={vehicleInfo.mainOfficeAddress} />
-        <Field label="Truck / trailer no." value={vehicleNumbers} />
-        <Field
-          label="Shipping doc # / shipper & commodity"
-          value={vehicleInfo.shippingDocNumber}
-        />
+        <Field label="Home terminal address" value={vehicleInfo.homeTerminalAddress} />
         <Field label="Driver" value={vehicleInfo.driverName} />
         <Field label="Co-driver" value={vehicleInfo.coDriverName} />
-        <Field label="Driver signature" value={vehicleInfo.driverName ? "(certified above)" : ""} />
       </div>
 
       <div className="mb-1.5 flex flex-wrap items-center justify-between gap-x-3 gap-y-1 print:hidden">
@@ -381,6 +387,51 @@ export default function DailyLogSheet({ log, meta, vehicleInfo = {}, onHighlight
             );
           })}
         </svg>
+      </div>
+
+      <div className="mt-5 rounded-lg bg-ink-50 p-4 dark:bg-ink-950/40">
+        <p className="text-[10px] tracking-wide text-ink-500 uppercase dark:text-ink-400">Shipping documents</p>
+        <p className="mt-1 text-sm text-ink-800 dark:text-ink-200">
+          <span className="text-ink-500 dark:text-ink-400">DVL or manifest no., or shipper &amp; commodity: </span>
+          {vehicleInfo.shippingDocNumber || <span className="text-ink-300 dark:text-ink-600">&mdash;</span>}
+        </p>
+        <p className="mt-2 text-[10px] text-ink-400 italic dark:text-ink-500">
+          Enter name of place you reported and where released from work, and when and where each change of duty
+          occurred. Use time standard of home terminal.
+        </p>
+      </div>
+
+      <div className="mt-4 rounded-lg border border-ink-100 p-4 dark:border-ink-800">
+        <p className="mb-3 text-[10px] font-semibold tracking-wide text-ink-500 uppercase dark:text-ink-400">
+          Recap &mdash; complete at end of day
+        </p>
+        <div className="grid grid-cols-2 gap-x-4 gap-y-3 sm:grid-cols-5">
+          <RecapField label="On duty hours today (lines 3+4)" value={onDutyToday} />
+          <div className="sm:col-span-2">
+            <p className="mb-1.5 text-[10px] font-semibold text-ink-700 dark:text-ink-300">70-hour / 8-day drivers</p>
+            <div className="grid grid-cols-2 gap-3">
+              <RecapField label="A. On duty, last 8 days incl. today" value={cycleUsed ?? null} />
+              <RecapField label="B. Available tomorrow (70 − A)" value={hoursAvailable} />
+            </div>
+          </div>
+          <div className="sm:col-span-2">
+            <p className="mb-1.5 text-[10px] font-semibold text-ink-400 dark:text-ink-500">60-hour / 7-day drivers</p>
+            <div className="grid grid-cols-2 gap-3">
+              <RecapField label="A. On duty, last 7 days incl. today" value={null} />
+              <RecapField label="B. Available tomorrow (60 − A)" value={null} />
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div className="mt-4">
+        <p className="text-xs text-ink-500 italic dark:text-ink-400">
+          I hereby certify that the entries in this record of duty status are true and correct.
+        </p>
+        <div className="mt-5 max-w-xs border-b border-ink-300 pb-1 dark:border-ink-700">
+          <span className="text-sm text-ink-800 dark:text-ink-200">{vehicleInfo.driverName || " "}</span>
+        </div>
+        <p className="text-[10px] text-ink-400 dark:text-ink-500">Driver signature</p>
       </div>
     </div>
   );

@@ -1,7 +1,7 @@
 from datetime import datetime
 from unittest import TestCase
 
-from trips.services.hos_engine import DutySegment, DutyStatus
+from trips.services.hos_engine import RESTART_LABEL, DutySegment, DutyStatus
 from trips.services.log_builder import build_daily_logs
 
 
@@ -78,6 +78,65 @@ class DailyLogSplittingTests(TestCase):
 
     def test_empty_segments_returns_empty_logs(self):
         self.assertEqual(build_daily_logs([]), [])
+
+    def test_from_to_use_first_and_last_located_remark(self):
+        day2 = self.logs[1]
+        self.assertEqual(day2.from_location, "Springfield, IL")
+        self.assertEqual(day2.to_location, "Terre Haute, IN")
+
+    def test_from_to_carries_forward_on_a_day_with_no_status_changes(self):
+        # Day 3 is pure off-duty filler continuing the overnight rest that
+        # started on day 2 -- no remark fires (no status change at
+        # midnight), so there's nothing to read a location from directly.
+        # It shouldn't show blank dashes: the truck is still sitting
+        # wherever day 2 left it.
+        day2, day3 = self.logs[1], self.logs[2]
+        self.assertEqual(day3.from_location, day2.to_location)
+        self.assertEqual(day3.to_location, day2.to_location)
+        self.assertEqual(day3.from_location, "Terre Haute, IN")
+
+
+class CycleHoursUsedTests(TestCase):
+    def test_seeds_from_the_input_and_accumulates_on_duty_hours(self):
+        d1 = datetime(2026, 1, 5)
+        segments = [
+            _seg(DutyStatus.DRIVING, d1.replace(hour=6), d1.replace(hour=14), "Driving"),
+            _seg(DutyStatus.ON_DUTY_NOT_DRIVING, d1.replace(hour=14), d1.replace(hour=15), "Drop-off"),
+        ]
+        logs = build_daily_logs(segments, current_cycle_used_hours=20.0)
+        # 20 (input) + 8h driving + 1h on-duty-not-driving
+        self.assertAlmostEqual(logs[0].cycle_hours_used, 29.0)
+
+    def test_off_duty_and_sleeper_time_dont_count(self):
+        d1 = datetime(2026, 1, 5)
+        segments = [
+            _seg(DutyStatus.OFF_DUTY, d1.replace(hour=0), d1.replace(hour=10), "Off duty"),
+            _seg(DutyStatus.SLEEPER_BERTH, d1.replace(hour=10), d1.replace(hour=20), "Sleeper"),
+            _seg(DutyStatus.DRIVING, d1.replace(hour=20), d1.replace(hour=22), "Driving"),
+        ]
+        logs = build_daily_logs(segments, current_cycle_used_hours=5.0)
+        self.assertAlmostEqual(logs[0].cycle_hours_used, 7.0)
+
+    def test_34_hour_restart_resets_the_counter_to_zero(self):
+        d1, d2, d3 = datetime(2026, 1, 5), datetime(2026, 1, 6), datetime(2026, 1, 7)
+        segments = [
+            _seg(DutyStatus.DRIVING, d1.replace(hour=0), d1.replace(hour=8), "Driving"),
+            # A 34-hour restart starting right after -- runs into day 2.
+            _seg(DutyStatus.SLEEPER_BERTH, d1.replace(hour=8), d2.replace(hour=18), RESTART_LABEL),
+            _seg(DutyStatus.DRIVING, d2.replace(hour=18), d3.replace(hour=2), "Driving"),
+        ]
+        logs = build_daily_logs(segments, current_cycle_used_hours=60.0)
+        # Day 1: 60 (input) + 8h driving, THEN the restart segment starts
+        # (08:00) and resets to 0 -- mirrors the HOS engine's own logic,
+        # which resets the instant a restart is inserted, not once it
+        # completes, so this stays consistent with what the engine
+        # actually used to decide it needed a restart in the first place.
+        self.assertAlmostEqual(logs[0].cycle_hours_used, 0.0)
+        # Day 2: restart continues from 00:00-18:00 (still 0), then driving
+        # resumes 18:00-24:00 -> 6h.
+        self.assertAlmostEqual(logs[1].cycle_hours_used, 6.0)
+        # Day 3: driving continues 00:00-02:00 -> +2h on top of day 2's 6.
+        self.assertAlmostEqual(logs[2].cycle_hours_used, 8.0)
 
 
 class PerDayMileageTests(TestCase):

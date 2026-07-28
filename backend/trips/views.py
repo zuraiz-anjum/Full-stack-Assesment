@@ -63,6 +63,7 @@ class TripListCreateView(generics.ListAPIView):
     VEHICLE_INFO_FIELDS = [
         "carrier_name",
         "main_office_address",
+        "home_terminal_address",
         "truck_number",
         "trailer_number",
         "driver_name",

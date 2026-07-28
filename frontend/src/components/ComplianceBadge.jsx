@@ -1,4 +1,6 @@
-import { useEffect, useRef } from "react";
+import { BarChart3 } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
+import ComplianceDetailsModal from "./ComplianceDetailsModal";
 
 const REDUCED_MOTION =
   typeof window !== "undefined" && window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
@@ -25,53 +27,21 @@ function useDrawIn(ref, { delay = 0 } = {}) {
   }, [ref, delay]);
 }
 
-// Both metrics here are plain sums the FMCSA rules are themselves defined
-// as sums of (not e.g. the 14-hour window, which is elapsed wall-clock
-// time since shift start and would need a shakier derivation from block
-// timestamps) -- so these numbers are exactly what a dispatcher would get
-// pulling out a calculator, not an approximation dressed up as one.
-function computeMargins(result) {
-  const days = result.daily_logs ?? [];
-  const maxDrivingDay = Math.max(0, ...days.map((d) => d.totals?.DRIVING ?? 0));
-  const cycleStart = result.input?.current_cycle_used_hours ?? 0;
-  const tripOnDuty = (result.summary?.driving_hours ?? 0) + (result.summary?.on_duty_not_driving_hours ?? 0);
-  const cycleUsed = cycleStart + tripOnDuty;
-  return [
-    { label: "Busiest driving day", value: maxDrivingDay, limit: 11 },
-    { label: "70-hr/8-day cycle", value: cycleUsed, limit: 70 },
-  ];
-}
-
-function MarginBar({ label, value, limit }) {
-  const pct = Math.min(100, Math.max(0, (value / limit) * 100));
-  const color = pct >= 90 ? "var(--color-amber-600)" : pct >= 70 ? "var(--color-amber-500)" : "var(--color-status-driving)";
-  return (
-    <div className="min-w-[150px] flex-1">
-      <div className="mb-1 flex items-center justify-between text-xs">
-        <span className="text-ink-500 dark:text-ink-400">{label}</span>
-        <span className="font-semibold tabular-nums text-ink-800 dark:text-ink-200">
-          {value.toFixed(1)}h <span className="text-ink-400 dark:text-ink-500">/ {limit}h</span>
-        </span>
-      </div>
-      <div className="h-1.5 overflow-hidden rounded-full bg-ink-100 dark:bg-ink-800">
-        <div
-          className="h-full rounded-full transition-[width] duration-700 ease-out"
-          style={{ width: `${pct}%`, background: color }}
-        />
-      </div>
-    </div>
-  );
-}
-
+// The margin bars (busiest driving day / cycle usage) used to live inline
+// here, but that's supplementary analysis, not part of the actual daily
+// log a driver hands in -- keeping this card to just the pass/fail
+// affirmation (matching how the log sheets themselves now mirror the real
+// paper form exactly) and tucking the numbers behind their own button
+// keeps the two concerns separate.
 export default function ComplianceBadge({ result }) {
   const shieldRef = useRef(null);
   const checkRef = useRef(null);
   useDrawIn(shieldRef);
   useDrawIn(checkRef, { delay: 550 });
-  const margins = result ? computeMargins(result) : [];
+  const [detailsOpen, setDetailsOpen] = useState(false);
 
   return (
-    <div className="animate-fade-in-up rounded-xl border border-ink-100 bg-white px-4 py-3 dark:border-ink-800 dark:bg-ink-900/40">
+    <div className="animate-fade-in-up flex items-center justify-between gap-2.5 rounded-xl border border-ink-100 bg-white px-4 py-3 dark:border-ink-800 dark:bg-ink-900/40">
       <div className="flex items-center gap-2.5">
         <svg width="26" height="26" viewBox="0 0 26 26" fill="none" aria-hidden="true" className="shrink-0">
           <path
@@ -97,13 +67,17 @@ export default function ComplianceBadge({ result }) {
           <p className="text-xs text-ink-500 dark:text-ink-400">49 CFR Part 395 · 70-hr/8-day cycle, no adverse conditions</p>
         </div>
       </div>
-      {margins.length > 0 && (
-        <div className="mt-3 flex flex-wrap gap-x-6 gap-y-2 border-t border-ink-100 pt-3 dark:border-ink-800">
-          {margins.map((m) => (
-            <MarginBar key={m.label} {...m} />
-          ))}
-        </div>
+      {result && (
+        <button
+          type="button"
+          onClick={() => setDetailsOpen(true)}
+          className="flex shrink-0 items-center gap-1.5 rounded-lg border border-ink-100 px-2.5 py-1.5 text-xs font-medium text-ink-600 transition hover:border-ink-200 hover:bg-ink-50 dark:border-ink-800 dark:text-ink-300 dark:hover:border-ink-700 dark:hover:bg-ink-800"
+        >
+          <BarChart3 className="h-3.5 w-3.5" />
+          <span className="hidden sm:inline">View margins</span>
+        </button>
       )}
+      {detailsOpen && result && <ComplianceDetailsModal result={result} onClose={() => setDetailsOpen(false)} />}
     </div>
   );
 }

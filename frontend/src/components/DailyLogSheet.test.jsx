@@ -53,9 +53,9 @@ describe("DailyLogSheet", () => {
     expect(container.textContent).toContain("Off Duty: 10.00h");
   });
 
-  it("renders the per-day mileage total", () => {
+  it("renders the per-day mileage total (both driving miles and total mileage today)", () => {
     render(<DailyLogSheet log={SAMPLE_LOG} />);
-    expect(screen.getByText("250.4 mi")).toBeInTheDocument();
+    expect(screen.getAllByText("250.4 mi")).toHaveLength(2);
   });
 
   it("shows an em dash placeholder for vehicle fields that weren't provided", () => {
@@ -72,7 +72,9 @@ describe("DailyLogSheet", () => {
       />
     );
     expect(screen.getByText("Acme Freight LLC")).toBeInTheDocument();
-    expect(screen.getByText("John Doe")).toBeInTheDocument();
+    // Appears twice: once in the Driver field, once on the certification
+    // signature line.
+    expect(screen.getAllByText("John Doe")).toHaveLength(2);
   });
 
   it("shows a real ampersand, not a literal '&amp;' string (regression)", () => {
@@ -84,5 +86,25 @@ describe("DailyLogSheet", () => {
   it("does not crash when total_miles, blocks, remarks, or totals are missing (older stored trips)", () => {
     const bareLog = { date: "2026-01-05", day_index: 1 };
     expect(() => render(<DailyLogSheet log={bareLog} />)).not.toThrow();
+  });
+
+  it("renders From/To directly from the log's carried-forward location fields", () => {
+    const log = { ...SAMPLE_LOG, from_location: "Chicago, IL, USA", to_location: "Indianapolis, IN, USA" };
+    render(<DailyLogSheet log={log} />);
+    expect(screen.getByText("Chicago, IL, USA")).toBeInTheDocument();
+    expect(screen.getByText("Indianapolis, IN, USA")).toBeInTheDocument();
+  });
+
+  it("fills in the 70-hour/8-day recap and leaves 60-hour/7-day blank", () => {
+    const log = { ...SAMPLE_LOG, cycle_hours_used: 25 };
+    const { container } = render(<DailyLogSheet log={log} />);
+    expect(container.textContent).toContain("25.00h");
+    // Hours available tomorrow = 70 - 25 = 45.
+    expect(container.textContent).toContain("45.00h");
+  });
+
+  it("shows blank dashes in the recap when cycle_hours_used isn't present", () => {
+    render(<DailyLogSheet log={SAMPLE_LOG} />);
+    expect(screen.getAllByText("—").length).toBeGreaterThan(0);
   });
 });
