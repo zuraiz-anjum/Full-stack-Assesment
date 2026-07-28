@@ -14,6 +14,15 @@ ORS_BASE_URL = "https://api.openrouteservice.org"
 METERS_PER_MILE = 1609.344
 REQUEST_TIMEOUT_SECONDS = 15
 
+# Pelias (ORS's geocoder) layers, restricted to ones that resolve to an
+# actual point on the ground. Without this, a bare state name like "Indiana"
+# or "New Jersey" matches the `region` layer and geocodes "successfully" to
+# that state's geographic centroid -- which is frequently nowhere near a
+# road, so routing then fails downstream with a confusing "couldn't find a
+# drivable route" error that gives no hint the real problem was upstream.
+# Excludes region/macroregion/county/macrocounty/country/coarse.
+SPECIFIC_PLACE_LAYERS = "locality,localadmin,borough,neighbourhood,address,street,venue"
+
 
 class RoutingError(Exception):
     """Raised when geocoding or directions lookup fails."""
@@ -58,7 +67,13 @@ def geocode(query: str) -> GeocodedPlace:
 
     resp = requests.get(
         f"{ORS_BASE_URL}/geocode/search",
-        params={"api_key": _api_key(), "text": query, "size": 1, "boundary.country": "USA"},
+        params={
+            "api_key": _api_key(),
+            "text": query,
+            "size": 1,
+            "boundary.country": "USA",
+            "layers": SPECIFIC_PLACE_LAYERS,
+        },
         timeout=REQUEST_TIMEOUT_SECONDS,
     )
     if resp.status_code != 200:
@@ -67,7 +82,10 @@ def geocode(query: str) -> GeocodedPlace:
 
     features = resp.json().get("features", [])
     if not features:
-        raise RoutingError(f"Could not find a location matching '{query}'.")
+        raise RoutingError(
+            f"Could not find a specific location matching '{query}'. Try a city name or a "
+            "full address instead of just a state."
+        )
 
     feature = features[0]
     lon, lat = feature["geometry"]["coordinates"]
@@ -82,7 +100,13 @@ def autocomplete(query: str, limit: int = 5) -> list[GeocodedPlace]:
 
     resp = requests.get(
         f"{ORS_BASE_URL}/geocode/autocomplete",
-        params={"api_key": _api_key(), "text": query, "size": limit, "boundary.country": "USA"},
+        params={
+            "api_key": _api_key(),
+            "text": query,
+            "size": limit,
+            "boundary.country": "USA",
+            "layers": SPECIFIC_PLACE_LAYERS,
+        },
         timeout=REQUEST_TIMEOUT_SECONDS,
     )
     if resp.status_code != 200:
