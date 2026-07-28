@@ -144,6 +144,9 @@ export default function TripResults({ result, vehicleInfo, tripId, shareToken })
             </button>
           </div>
         </div>
+        <p className="print-hide text-xs text-ink-500 dark:text-ink-400">
+          The downloaded PDF has the exact format required.
+        </p>
         {downloadError && (
           <p className="print-hide -mt-3 text-xs text-red-600 dark:text-red-400">{downloadError}</p>
         )}

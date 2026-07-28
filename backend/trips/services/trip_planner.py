@@ -63,12 +63,19 @@ def plan_trip(
     segments = simulate_trip(legs, current_cycle_used_hours, start_datetime)
 
     leg_lookup = {
-        LEG_CURRENT_TO_PICKUP: {"start": current, "end": pickup, "geometry": leg1_route.geometry},
-        LEG_PICKUP_TO_DROPOFF: {"start": pickup, "end": dropoff, "geometry": leg2_route.geometry},
+        LEG_CURRENT_TO_PICKUP: {
+            "start": current, "end": pickup,
+            "geometry": leg1_route.geometry, "distance_miles": leg1_route.distance_miles,
+        },
+        LEG_PICKUP_TO_DROPOFF: {
+            "start": pickup, "end": dropoff,
+            "geometry": leg2_route.geometry, "distance_miles": leg2_route.distance_miles,
+        },
     }
     _resolve_segment_locations(segments, leg_lookup)
 
     daily_logs = build_daily_logs(segments, current_cycle_used_hours)
+    _reconcile_day_boundary_locations(daily_logs, segments, leg_lookup)
 
     return _build_result_dict(
         current=current,
@@ -110,6 +117,55 @@ def _resolve_segment_locations(segments, leg_lookup) -> None:
                 label = reverse_geocode(lat, lon)
                 cache[cache_key] = {"lat": lat, "lon": lon, "label": label}
             seg.resolved_location = cache[cache_key]
+
+
+def _reconcile_day_boundary_locations(daily_logs, segments, leg_lookup) -> None:
+    """log_builder's From/To already handles a day with zero remarks by
+    carrying forward the last known location, but a day whose driving
+    simply *continues* overnight without a status change exactly at
+    midnight still falls back to wherever that day's first remark happens
+    to be -- which can be hours in, and won't match the previous day's To.
+    Flipping between two log pages that don't connect reads as a break in
+    the route even though nothing is actually wrong.
+
+    This computes the truck's real position at every midnight boundary by
+    interpolating along the route geometry (same technique already used to
+    resolve stop locations) and forces both sides of the boundary to that
+    one value, so they always agree by construction.
+    """
+    if not segments or len(daily_logs) < 2:
+        return
+
+    cache: dict[tuple[str, float], dict] = {}
+
+    def resolve_fraction(leg_name: str, fraction: float) -> dict:
+        key = (leg_name, round(fraction, 4))
+        if key not in cache:
+            lat, lon = interpolate_along_path(leg_lookup[leg_name]["geometry"], fraction)
+            cache[key] = {"lat": lat, "lon": lon, "label": reverse_geocode(lat, lon)}
+        return cache[key]
+
+    for today, tomorrow in zip(daily_logs, daily_logs[1:]):
+        boundary = datetime.strptime(tomorrow.date, "%Y-%m-%d")
+        active = next((s for s in segments if s.start <= boundary < s.end), None)
+        if active is None:
+            continue
+
+        if active.status == DutyStatus.DRIVING and active.leg_name and active.miles > 0 and active.duration_hours > 0:
+            speed = active.miles / active.duration_hours
+            miles_in = speed * (boundary - active.start).total_seconds() / 3600
+            local_fraction = miles_in / active.miles
+            leg_total_miles = leg_lookup[active.leg_name]["distance_miles"]
+            fraction_span = active.miles / leg_total_miles if leg_total_miles > 0 else 0.0
+            absolute_fraction = (active.leg_progress_fraction or 0.0) + local_fraction * fraction_span
+            place = resolve_fraction(active.leg_name, max(0.0, min(absolute_fraction, 1.0)))
+            label = place["label"]
+        else:
+            label = active.resolved_location["label"] if active.resolved_location else None
+
+        if label:
+            today.to_location = label
+            tomorrow.from_location = label
 
 
 def _build_result_dict(

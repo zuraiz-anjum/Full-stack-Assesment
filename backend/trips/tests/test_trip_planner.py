@@ -178,3 +178,80 @@ class MidRouteLocationResolutionTests(TestCase):
         break_stop = next(s for s in result["stops"] if "30-minute break" in s["label"])
         self.assertEqual(break_stop["location"]["label"], "Somewhere, IN, USA")
         mock_reverse_geocode.assert_called()
+
+
+class DayBoundaryLocationReconciliationTests(TestCase):
+    """
+    Regression coverage for a real gap found reviewing a generated PDF:
+    driving that continues past midnight without any status change right
+    at the boundary used to leave the next day's From at wherever the
+    *next* remark happened to be (the pickup stop, well down the road)
+    instead of the truck's actual midnight position -- and the previous
+    day's To didn't match it either. Both sides should now agree, and
+    agree with where the truck really was.
+    """
+
+    @patch("trips.services.trip_planner.reverse_geocode", return_value="Somewhere, IN, USA")
+    @patch("trips.services.trip_planner.geocode", side_effect=fake_geocode)
+    @patch("trips.services.trip_planner.get_route")
+    def test_from_and_to_agree_at_a_midnight_crossed_mid_drive(
+        self, mock_get_route, mock_geocode, mock_reverse_geocode
+    ):
+        def route_side_effect(start, end):
+            if start is CHICAGO:
+                # 5 hours of driving starting 20:00 -- crosses midnight at
+                # the 4-hour mark (80% through the leg), with nothing else
+                # happening on either side to trigger a remark right at 00:00.
+                return make_route(CHICAGO, INDIANAPOLIS, 250, 5)
+            return make_route(INDIANAPOLIS, NASHVILLE, 150, 3)
+
+        mock_get_route.side_effect = route_side_effect
+        result = plan_trip(
+            "Chicago, IL",
+            "Indianapolis, IN",
+            "Nashville, TN",
+            current_cycle_used_hours=0,
+            start_datetime=datetime(2026, 1, 5, 20, 0),
+        )
+        logs = result["daily_logs"]
+        self.assertEqual(len(logs), 2)
+        day1, day2 = logs
+
+        self.assertEqual(day1["to_location"], "Somewhere, IN, USA")
+        self.assertEqual(day2["from_location"], "Somewhere, IN, USA")
+        self.assertEqual(day1["to_location"], day2["from_location"])
+        # Sanity check this isn't just coincidentally matching the leg
+        # endpoints -- the truck genuinely hadn't reached Indianapolis yet.
+        self.assertNotEqual(day2["from_location"], "Indianapolis, IN, USA")
+
+    @patch("trips.services.trip_planner.reverse_geocode", return_value="Somewhere, IN, USA")
+    @patch("trips.services.trip_planner.geocode", side_effect=fake_geocode)
+    @patch("trips.services.trip_planner.get_route")
+    def test_stationary_boundary_reuses_the_resolved_location_with_no_extra_geocoding(
+        self, mock_get_route, mock_geocode, mock_reverse_geocode
+    ):
+        # A short drive finishes at 23:30, then the mandatory 1-hour pickup
+        # stop (stationary, parked at the pickup point) runs 23:30-00:30 --
+        # midnight falls inside that stop, not mid-drive. A stationary
+        # segment's location is already fully known (it's pinned to a leg
+        # endpoint), so this should resolve for free, no interpolation or
+        # extra reverse-geocode call needed.
+        def route_side_effect(start, end):
+            if start is CHICAGO:
+                return make_route(CHICAGO, INDIANAPOLIS, 25, 0.5)
+            return make_route(INDIANAPOLIS, NASHVILLE, 50, 1)
+
+        mock_get_route.side_effect = route_side_effect
+        result = plan_trip(
+            "Chicago, IL",
+            "Indianapolis, IN",
+            "Nashville, TN",
+            current_cycle_used_hours=0,
+            start_datetime=datetime(2026, 1, 5, 23, 0),
+        )
+        logs = result["daily_logs"]
+        self.assertEqual(len(logs), 2)
+        day1, day2 = logs
+        self.assertEqual(day1["to_location"], "Indianapolis, IN, USA")
+        self.assertEqual(day2["from_location"], "Indianapolis, IN, USA")
+        mock_reverse_geocode.assert_not_called()
