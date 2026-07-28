@@ -1,5 +1,5 @@
-import { MoveHorizontal } from "lucide-react";
-import { useEffect, useRef } from "react";
+import { MapPin, MoveHorizontal } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
 
 const REDUCED_MOTION =
   typeof window !== "undefined" && window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
@@ -75,15 +75,15 @@ function fromTo(log) {
 function Field({ label, value }) {
   return (
     <div className="min-w-0">
-      <p className="text-[10px] tracking-wide text-ink-500 uppercase">{label}</p>
-      <p className="truncate border-b border-ink-200 pb-1 text-sm text-ink-800">
-        {value || <span className="text-ink-300">&mdash;</span>}
+      <p className="text-[10px] tracking-wide text-ink-500 uppercase dark:text-ink-400">{label}</p>
+      <p className="truncate border-b border-ink-200 pb-1 text-sm text-ink-800 dark:border-ink-700 dark:text-ink-200">
+        {value || <span className="text-ink-300 dark:text-ink-600">&mdash;</span>}
       </p>
     </div>
   );
 }
 
-export default function DailyLogSheet({ log, meta, vehicleInfo = {} }) {
+export default function DailyLogSheet({ log, meta, vehicleInfo = {}, onHighlightLocation }) {
   const stepPath = buildStepPath(log.blocks);
   const pathRef = useRef(null);
   const vehicleNumbers = [vehicleInfo.truckNumber, vehicleInfo.trailerNumber]
@@ -91,6 +91,24 @@ export default function DailyLogSheet({ log, meta, vehicleInfo = {} }) {
     .join(" / ");
   const logDate = new Date(log.date + "T00:00:00");
   const [fromLoc, toLoc] = fromTo(log);
+
+  // Hovering a remark (mouse) previews it; clicking/tapping pins it -- pinning
+  // is what makes this usable on touch devices, which never fire hover.
+  const [hoverIdx, setHoverIdx] = useState(null);
+  const [pinnedIdx, setPinnedIdx] = useState(null);
+  const activeIdx = hoverIdx ?? pinnedIdx;
+  const activeRemark = activeIdx != null ? log.remarks?.[activeIdx] : null;
+
+  useEffect(() => {
+    onHighlightLocation?.(activeRemark?.location_label || null);
+  }, [activeRemark, onHighlightLocation]);
+
+  useEffect(() => {
+    // Clear this sheet's claim on the map highlight when it unmounts (e.g.
+    // the user picks a different trip) so a stale highlight doesn't linger.
+    return () => onHighlightLocation?.(null);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   useEffect(() => {
     const path = pathRef.current;
@@ -109,10 +127,10 @@ export default function DailyLogSheet({ log, meta, vehicleInfo = {} }) {
   }, [stepPath]);
 
   return (
-    <div className="rounded-xl border border-ink-100 bg-white p-5 sm:p-6">
+    <div className="rounded-xl border border-ink-100 bg-white p-5 sm:p-6 dark:border-ink-800 dark:bg-ink-900/40">
       <div className="mb-4 flex flex-wrap items-baseline justify-between gap-2">
         <div>
-          <h3 className="text-base font-bold tracking-tight text-ink-950">
+          <h3 className="text-base font-bold tracking-tight text-ink-950 dark:text-ink-50">
             Day {log.day_index} &mdash;{" "}
             {new Date(log.date + "T00:00:00").toLocaleDateString(undefined, {
               weekday: "long",
@@ -121,19 +139,19 @@ export default function DailyLogSheet({ log, meta, vehicleInfo = {} }) {
               year: "numeric",
             })}
           </h3>
-          {meta && <p className="text-xs text-ink-500">{meta}</p>}
+          {meta && <p className="text-xs text-ink-500 dark:text-ink-400">{meta}</p>}
         </div>
         <div className="flex flex-wrap gap-3 text-xs">
           {ROWS.map((r) => (
-            <span key={r.key} className="flex items-center gap-1.5 text-ink-500">
+            <span key={r.key} className="flex items-center gap-1.5 text-ink-500 dark:text-ink-400">
               <span className="inline-block h-2 w-2 rounded-full" style={{ background: r.color }} />
-              {r.label.replace("\n", " ")}: <strong className="text-ink-900">{(log.totals?.[r.key] ?? 0).toFixed(2)}h</strong>
+              {r.label.replace("\n", " ")}: <strong className="text-ink-900 dark:text-ink-100">{(log.totals?.[r.key] ?? 0).toFixed(2)}h</strong>
             </span>
           ))}
         </div>
       </div>
 
-      <div className="mb-5 grid grid-cols-2 gap-x-4 gap-y-3 rounded-lg bg-ink-50 p-4 sm:grid-cols-4 print:grid-cols-2">
+      <div className="mb-5 grid grid-cols-2 gap-x-4 gap-y-3 rounded-lg bg-ink-50 p-4 sm:grid-cols-4 print:grid-cols-2 dark:bg-ink-950/40">
         <Field
           label="Date"
           value={logDate.toLocaleDateString(undefined, { month: "2-digit", day: "2-digit", year: "numeric" })}
@@ -153,10 +171,25 @@ export default function DailyLogSheet({ log, meta, vehicleInfo = {} }) {
         <Field label="Driver signature" value={vehicleInfo.driverName ? "(certified above)" : ""} />
       </div>
 
-      <p className="mb-1.5 flex items-center gap-1 text-xs text-ink-500 sm:hidden print:hidden">
-        <MoveHorizontal className="h-3.5 w-3.5" />
-        Swipe to see the full 24-hour grid
-      </p>
+      <div className="mb-1.5 flex flex-wrap items-center justify-between gap-x-3 gap-y-1 print:hidden">
+        <p className="flex items-center gap-1 text-xs text-ink-500 sm:hidden dark:text-ink-400">
+          <MoveHorizontal className="h-3.5 w-3.5" />
+          Swipe to see the full 24-hour grid
+        </p>
+        <p className="flex min-w-0 items-center gap-1.5 text-xs text-ink-600 dark:text-ink-300">
+          <MapPin className="h-3.5 w-3.5 shrink-0 text-amber-600 dark:text-amber-400" />
+          {activeRemark ? (
+            <span className="truncate">
+              <strong className="font-semibold text-ink-900 dark:text-ink-100">{formatClock(activeRemark.hour)}</strong>
+              {" — "}
+              {activeRemark.activity_label}
+              {activeRemark.location_label ? ` (${activeRemark.location_label})` : ""}
+            </span>
+          ) : (
+            <span className="text-ink-400 dark:text-ink-500">Tap a marker below for details</span>
+          )}
+        </p>
+      </div>
       <div className="overflow-x-auto print:overflow-visible">
         <svg
           viewBox={`0 0 ${SVG_WIDTH} ${SVG_HEIGHT}`}
@@ -297,15 +330,49 @@ export default function DailyLogSheet({ log, meta, vehicleInfo = {} }) {
           />
           {(log.remarks ?? []).map((r, i) => {
             const x = xForHour(r.hour);
+            const active = i === activeIdx;
             return (
-              <g key={i}>
-                <line x1={x} y1={GRID_TOP} x2={x} y2={REMARKS_TOP + 4} stroke="#b45309" strokeDasharray="2 2" strokeWidth={1} />
-                <circle cx={x} cy={REMARKS_TOP} r={2.5} fill="#b45309" />
+              <g
+                key={i}
+                onClick={() => setPinnedIdx((cur) => (cur === i ? null : i))}
+                onMouseEnter={() => setHoverIdx(i)}
+                onMouseLeave={() => setHoverIdx(null)}
+                onFocus={() => setHoverIdx(i)}
+                onBlur={() => setHoverIdx(null)}
+                role="button"
+                tabIndex={0}
+                aria-pressed={active}
+                aria-label={`${formatClock(r.hour)}, ${r.activity_label}${r.location_label ? `, ${r.location_label}` : ""}`}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" || e.key === " ") {
+                    e.preventDefault();
+                    setPinnedIdx((cur) => (cur === i ? null : i));
+                  }
+                }}
+                className="cursor-pointer outline-none"
+              >
+                <line
+                  x1={x}
+                  y1={GRID_TOP}
+                  x2={x}
+                  y2={REMARKS_TOP + 4}
+                  stroke="#b45309"
+                  strokeDasharray={active ? "0" : "2 2"}
+                  strokeWidth={active ? 1.75 : 1}
+                />
+                {/* Larger invisible hit target so this is tappable on touch,
+                    while the visible dot stays small and unobtrusive. */}
+                <circle cx={x} cy={REMARKS_TOP} r={12} fill="transparent" />
+                {active && (
+                  <circle cx={x} cy={REMARKS_TOP} r={7} fill="#b45309" opacity={0.18} />
+                )}
+                <circle cx={x} cy={REMARKS_TOP} r={active ? 4 : 2.5} fill="#b45309" />
                 <text
                   x={x + 4}
                   y={REMARKS_TOP + 12}
                   fontSize="9.5"
-                  fill="#40403a"
+                  fontWeight={active ? 700 : 400}
+                  fill={active ? "#18180f" : "#40403a"}
                   transform={`rotate(38 ${x + 4} ${REMARKS_TOP + 12})`}
                 >
                   {formatClock(r.hour)} &middot; {r.location_label || r.activity_label}

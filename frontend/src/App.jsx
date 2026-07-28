@@ -3,6 +3,7 @@ import { useEffect, useRef, useState } from "react";
 import ErrorBoundary from "./components/ErrorBoundary";
 import GlobeHero from "./components/GlobeHero";
 import RouteMark from "./components/RouteMark";
+import ThemeToggle from "./components/ThemeToggle";
 import TripForm from "./components/TripForm";
 import TripHistorySidebar from "./components/TripHistorySidebar";
 import TripResults from "./components/TripResults";
@@ -10,10 +11,10 @@ import { extractErrorMessage, getTrip, listTrips, planTrip } from "./lib/api";
 
 function tripResultsFallback(reset) {
   return (
-    <div className="flex flex-col items-center justify-center gap-3 rounded-xl border-2 border-dashed border-red-200 bg-red-50 px-6 py-16 text-center">
+    <div className="flex flex-col items-center justify-center gap-3 rounded-xl border-2 border-dashed border-red-200 bg-red-50 px-6 py-16 text-center dark:border-red-900/50 dark:bg-red-950/20">
       <AlertTriangle className="h-8 w-8 text-red-500" />
-      <h2 className="text-lg font-semibold text-red-800">Couldn't display this trip</h2>
-      <p className="max-w-sm text-sm text-red-600">
+      <h2 className="text-lg font-semibold text-red-800 dark:text-red-300">Couldn't display this trip</h2>
+      <p className="max-w-sm text-sm text-red-600 dark:text-red-400">
         Something about this trip's data didn't render correctly. Try planning a new trip, or
         picking a different one from your recent trips.
       </p>
@@ -99,22 +100,25 @@ export default function App() {
   };
 
   return (
-    <div className="min-h-full bg-ink-50">
-      <header className="print-hide border-b border-ink-100 bg-white">
+    <div className="min-h-full bg-ink-50 dark:bg-transparent">
+      <header className="print-hide border-b border-ink-100 bg-white dark:border-ink-800 dark:bg-ink-950/40">
         <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-4 sm:px-6">
           <div className="flex items-center gap-2">
-            <Truck className="h-5 w-5 text-ink-950" strokeWidth={1.75} />
+            <Truck className="h-5 w-5 text-ink-950 dark:text-ink-50" strokeWidth={1.75} />
             <div>
-              <p className="flex items-center gap-2 text-sm font-bold tracking-tight text-ink-950">
+              <p className="flex items-center gap-2 text-sm font-bold tracking-tight text-ink-950 dark:text-ink-50">
                 RouteLog
                 <RouteMark />
               </p>
-              <p className="text-xs text-ink-500">HOS trip planner &amp; ELD log generator</p>
+              <p className="text-xs text-ink-500 dark:text-ink-400">HOS trip planner &amp; ELD log generator</p>
             </div>
           </div>
-          <p className="hidden text-xs text-ink-500 sm:block">
-            Property carrier · 70&nbsp;hrs/8&nbsp;days · No adverse conditions
-          </p>
+          <div className="flex items-center gap-3">
+            <p className="hidden text-xs text-ink-500 sm:block dark:text-ink-400">
+              Property carrier · 70&nbsp;hrs/8&nbsp;days · No adverse conditions
+            </p>
+            <ThemeToggle />
+          </div>
         </div>
       </header>
 
@@ -132,12 +136,12 @@ export default function App() {
 
           <section ref={resultsRef} className="min-w-0 space-y-6">
             {!result && (
-              <div className="flex h-full min-h-[420px] flex-col items-center justify-center rounded-xl border border-dashed border-ink-200 bg-white/40 px-6 text-center">
+              <div className="flex h-full min-h-[420px] flex-col items-center justify-center rounded-xl border border-dashed border-ink-200 bg-white/40 px-6 text-center dark:border-ink-800 dark:bg-ink-900/30">
                 <GlobeHero />
-                <h2 className="mt-1 text-2xl font-bold tracking-tight text-ink-950 sm:text-3xl">
+                <h2 className="mt-1 text-2xl font-bold tracking-tight text-ink-950 sm:text-3xl dark:text-ink-50">
                   Where to next?
                 </h2>
-                <p className="mt-2 max-w-sm text-sm text-ink-500">
+                <p className="mt-2 max-w-sm text-sm text-ink-500 dark:text-ink-400">
                   Fill in the form to generate a route, stop schedule, and a full set of
                   FMCSA-style daily log sheets for your trip.
                 </p>
@@ -162,7 +166,7 @@ export default function App() {
         </div>
       </main>
 
-      <footer className="print-hide mt-10 border-t border-ink-100 py-6 text-center text-xs text-ink-500">
+      <footer className="print-hide mt-10 border-t border-ink-100 py-6 text-center text-xs text-ink-500 dark:border-ink-800 dark:text-ink-500">
         Built for the FMCSA property-carrier HOS ruleset (49 CFR Part 395). Assumes no adverse
         driving conditions, a fuel stop every 1,000 miles, and 1 hour each for pickup and
         drop-off.

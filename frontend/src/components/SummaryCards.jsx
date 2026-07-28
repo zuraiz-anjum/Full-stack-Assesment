@@ -33,18 +33,18 @@ function Card({ icon: Icon, label, value, format, sub, delay = 0 }) {
 
   return (
     <div
-      className="animate-fade-in-up flex items-start gap-3 overflow-hidden rounded-xl border border-ink-100 bg-white p-4 transition duration-200 hover:-translate-y-0.5 hover:border-ink-200 hover:shadow-md hover:shadow-ink-950/5"
+      className="animate-fade-in-up flex items-start gap-3 overflow-hidden rounded-xl border border-ink-100 bg-white p-4 transition duration-200 hover:-translate-y-0.5 hover:border-ink-200 hover:shadow-md hover:shadow-ink-950/5 dark:border-ink-800 dark:bg-ink-900/40 dark:hover:border-ink-700 dark:hover:shadow-none"
       style={{ animationDelay: `${delay}ms` }}
     >
-      <div className="shrink-0 rounded-lg bg-amber-500/10 p-2 text-amber-600">
+      <div className="shrink-0 rounded-lg bg-amber-500/10 p-2 text-amber-600 dark:bg-amber-500/15 dark:text-amber-400">
         <Icon className="h-4 w-4" />
       </div>
       <div className="min-w-0">
-        <p className="truncate text-xs font-medium text-ink-500">{label}</p>
-        <p className="text-lg leading-tight font-semibold break-words text-ink-950 tabular-nums">
+        <p className="truncate text-xs font-medium text-ink-500 dark:text-ink-400">{label}</p>
+        <p className="text-lg leading-tight font-semibold break-words text-ink-950 tabular-nums dark:text-ink-50">
           {display}
         </p>
-        {sub && <p className="truncate text-xs text-ink-500">{sub}</p>}
+        {sub && <p className="truncate text-xs text-ink-500 dark:text-ink-400">{sub}</p>}
       </div>
     </div>
   );

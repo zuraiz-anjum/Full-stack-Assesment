@@ -24,14 +24,14 @@ export default function SplashIntro() {
 
   return (
     <div
-      className={`fixed inset-0 z-50 flex flex-col items-center justify-center bg-ink-50 transition-opacity duration-[450ms] ${
+      className={`fixed inset-0 z-50 flex flex-col items-center justify-center bg-ink-50 transition-opacity duration-[450ms] dark:bg-[#121210] ${
         phase === "leaving" ? "pointer-events-none opacity-0" : "opacity-100"
       }`}
       aria-hidden="true"
     >
       <div className="flex items-center gap-2.5">
-        <Truck className="h-7 w-7 text-ink-950" strokeWidth={1.75} />
-        <p className="flex items-center gap-2.5 text-lg font-semibold tracking-tight text-ink-950">
+        <Truck className="h-7 w-7 text-ink-950 dark:text-ink-50" strokeWidth={1.75} />
+        <p className="flex items-center gap-2.5 text-lg font-semibold tracking-tight text-ink-950 dark:text-ink-50">
           RouteLog
           <RouteMark className="scale-110" />
         </p>

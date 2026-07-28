@@ -4,6 +4,7 @@ import App from './App.jsx'
 import ErrorBoundary from './components/ErrorBoundary.jsx'
 import SharedTripPage from './components/SharedTripPage.jsx'
 import SplashIntro from './components/SplashIntro.jsx'
+import { forceLightForPrint } from './lib/theme.js'
 import './index.css'
 
 // No client-side router for one extra screen -- a shared trip link is just
@@ -12,11 +13,13 @@ const sharedMatch = window.location.pathname.match(
   /^\/shared\/([0-9a-f-]{36})\/?$/i,
 )
 
+forceLightForPrint()
+
 function rootFallback() {
   return (
-    <div className="flex min-h-screen flex-col items-center justify-center gap-3 bg-ink-50 px-6 text-center">
-      <h1 className="text-lg font-semibold text-ink-900">Something went wrong</h1>
-      <p className="max-w-sm text-sm text-ink-500">
+    <div className="flex min-h-screen flex-col items-center justify-center gap-3 bg-ink-50 px-6 text-center dark:bg-[#121210]">
+      <h1 className="text-lg font-semibold text-ink-900 dark:text-ink-50">Something went wrong</h1>
+      <p className="max-w-sm text-sm text-ink-500 dark:text-ink-400">
         The app hit an unexpected error. Reloading the page usually fixes it.
       </p>
       <button

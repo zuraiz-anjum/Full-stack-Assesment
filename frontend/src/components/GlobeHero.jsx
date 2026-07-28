@@ -50,7 +50,7 @@ function OrbitingTruck() {
   }, []);
 
   return (
-    <div ref={ref} className="absolute top-0 left-0 text-ink-950" style={{ willChange: "transform" }}>
+    <div ref={ref} className="absolute top-0 left-0 text-ink-950 dark:text-ink-50" style={{ willChange: "transform" }}>
       <Truck className="h-6 w-6" strokeWidth={2} />
     </div>
   );

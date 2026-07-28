@@ -1,8 +1,10 @@
-import { Check, Download, Loader2, Printer, Share2 } from "lucide-react";
+import { Check, Download, Loader2, Play, Printer, Share2 } from "lucide-react";
 import { lazy, Suspense, useState } from "react";
 import { downloadTripPdf } from "../lib/api";
+import ComplianceBadge from "./ComplianceBadge";
 import DailyLogSheet from "./DailyLogSheet";
 import RouteDirections from "./RouteDirections";
+import ShareImageButton from "./ShareImageButton";
 import SummaryCards from "./SummaryCards";
 
 // Leaflet is the single heaviest dependency in the bundle and isn't needed
@@ -13,8 +15,8 @@ const MapView = lazy(() => import("./MapView"));
 
 function MapSkeleton() {
   return (
-    <div className="flex h-full w-full items-center justify-center rounded-xl border border-ink-100 bg-ink-50">
-      <div className="h-6 w-6 animate-spin rounded-full border-2 border-ink-200 border-t-ink-700" />
+    <div className="flex h-full w-full items-center justify-center rounded-xl border border-ink-100 bg-ink-50 dark:border-ink-800 dark:bg-ink-900">
+      <div className="h-6 w-6 animate-spin rounded-full border-2 border-ink-200 border-t-ink-700 dark:border-ink-700 dark:border-t-ink-300" />
     </div>
   );
 }
@@ -29,6 +31,8 @@ export default function TripResults({ result, vehicleInfo, tripId, shareToken })
   const [downloading, setDownloading] = useState(false);
   const [downloadError, setDownloadError] = useState("");
   const [copied, setCopied] = useState(false);
+  const [replaying, setReplaying] = useState(false);
+  const [highlightedLabel, setHighlightedLabel] = useState(null);
 
   async function handleShare() {
     const url = `${window.location.origin}/shared/${shareToken}`;
@@ -64,17 +68,39 @@ export default function TripResults({ result, vehicleInfo, tripId, shareToken })
   return (
     <>
       <div className="print-hide space-y-6">
+        <ComplianceBadge key={tripId} />
         <SummaryCards summary={result.summary} route={result.route} />
-        <div className="h-[280px] sm:h-[420px]">
-          <Suspense fallback={<MapSkeleton />}>
-            <MapView waypoints={result.waypoints} geometry={result.route.geometry} stops={result.stops} />
-          </Suspense>
+        <div>
+          <div className="mb-2 flex items-center justify-between">
+            <h2 className="text-sm font-semibold text-ink-700 dark:text-ink-300">Route</h2>
+            <button
+              type="button"
+              onClick={() => setReplaying(true)}
+              disabled={replaying}
+              className="flex items-center gap-1.5 rounded-lg border border-ink-100 bg-white px-3 py-1.5 text-xs font-medium text-ink-600 transition hover:border-ink-200 hover:bg-ink-50 dark:border-ink-800 dark:bg-ink-900 dark:text-ink-300 dark:hover:border-ink-700 dark:hover:bg-ink-800 disabled:cursor-not-allowed disabled:opacity-60"
+            >
+              <Play className="h-3.5 w-3.5" />
+              {replaying ? "Replaying…" : "Play replay"}
+            </button>
+          </div>
+          <div className="h-[280px] sm:h-[420px]">
+            <Suspense fallback={<MapSkeleton />}>
+              <MapView
+                waypoints={result.waypoints}
+                geometry={result.route.geometry}
+                stops={result.stops}
+                replaying={replaying}
+                onReplayDone={() => setReplaying(false)}
+                highlightLabel={highlightedLabel}
+              />
+            </Suspense>
+          </div>
         </div>
         <RouteDirections legs={result.route.legs} />
       </div>
       <div className="space-y-5">
         <div className="flex flex-wrap items-center justify-between gap-y-2">
-          <h2 className="text-lg font-bold tracking-tight text-ink-950">
+          <h2 className="text-lg font-bold tracking-tight text-ink-950 dark:text-ink-50">
             Daily log sheets ({result.daily_logs.length})
           </h2>
           <div className="print-hide flex flex-wrap items-center gap-2">
@@ -82,7 +108,7 @@ export default function TripResults({ result, vehicleInfo, tripId, shareToken })
               <button
                 type="button"
                 onClick={handleShare}
-                className="flex items-center gap-1.5 rounded-lg border border-ink-100 bg-white px-3 py-1.5 text-xs font-medium text-ink-600 transition hover:border-ink-200 hover:bg-ink-50"
+                className="flex items-center gap-1.5 rounded-lg border border-ink-100 bg-white px-3 py-1.5 text-xs font-medium text-ink-600 transition hover:border-ink-200 hover:bg-ink-50 dark:border-ink-800 dark:bg-ink-900 dark:text-ink-300 dark:hover:border-ink-700 dark:hover:bg-ink-800"
               >
                 {copied ? (
                   <Check className="h-3.5 w-3.5 text-green-600" />
@@ -92,12 +118,13 @@ export default function TripResults({ result, vehicleInfo, tripId, shareToken })
                 {copied ? "Link copied" : "Share"}
               </button>
             )}
+            <ShareImageButton result={result} tripId={tripId} />
             {tripId && (
               <button
                 type="button"
                 onClick={handleDownloadPdf}
                 disabled={downloading}
-                className="flex items-center gap-1.5 rounded-lg border border-ink-100 bg-white px-3 py-1.5 text-xs font-medium text-ink-600 transition hover:border-ink-200 hover:bg-ink-50 disabled:cursor-not-allowed disabled:opacity-60"
+                className="flex items-center gap-1.5 rounded-lg border border-ink-100 bg-white px-3 py-1.5 text-xs font-medium text-ink-600 transition hover:border-ink-200 hover:bg-ink-50 dark:border-ink-800 dark:bg-ink-900 dark:text-ink-300 dark:hover:border-ink-700 dark:hover:bg-ink-800 disabled:cursor-not-allowed disabled:opacity-60"
               >
                 {downloading ? (
                   <Loader2 className="h-3.5 w-3.5 animate-spin" />
@@ -110,7 +137,7 @@ export default function TripResults({ result, vehicleInfo, tripId, shareToken })
             <button
               type="button"
               onClick={() => window.print()}
-              className="flex items-center gap-1.5 rounded-lg border border-ink-100 bg-white px-3 py-1.5 text-xs font-medium text-ink-600 transition hover:border-ink-200 hover:bg-ink-50"
+              className="flex items-center gap-1.5 rounded-lg border border-ink-100 bg-white px-3 py-1.5 text-xs font-medium text-ink-600 transition hover:border-ink-200 hover:bg-ink-50 dark:border-ink-800 dark:bg-ink-900 dark:text-ink-300 dark:hover:border-ink-700 dark:hover:bg-ink-800"
             >
               <Printer className="h-3.5 w-3.5" />
               Print
@@ -118,11 +145,11 @@ export default function TripResults({ result, vehicleInfo, tripId, shareToken })
           </div>
         </div>
         {downloadError && (
-          <p className="print-hide -mt-3 text-xs text-red-600">{downloadError}</p>
+          <p className="print-hide -mt-3 text-xs text-red-600 dark:text-red-400">{downloadError}</p>
         )}
         {result.daily_logs.map((log) => (
           <div key={log.date} className="print-area">
-            <DailyLogSheet log={log} vehicleInfo={vehicleInfo} />
+            <DailyLogSheet log={log} vehicleInfo={vehicleInfo} onHighlightLocation={setHighlightedLabel} />
           </div>
         ))}
       </div>

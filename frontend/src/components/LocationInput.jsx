@@ -68,11 +68,11 @@ export default function LocationInput({ id, label, placeholder, value, onChange,
 
   return (
     <div className="relative" ref={containerRef}>
-      <label htmlFor={id} className="mb-1.5 block text-sm font-medium text-ink-700">
+      <label htmlFor={id} className="mb-1.5 block text-sm font-medium text-ink-700 dark:text-ink-300">
         {label}
       </label>
       <div className="relative">
-        <Icon className="pointer-events-none absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-ink-500" />
+        <Icon className="pointer-events-none absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-ink-500 dark:text-ink-400" />
         <input
           id={id}
           ref={inputRef}
@@ -85,11 +85,11 @@ export default function LocationInput({ id, label, placeholder, value, onChange,
           onBlur={() => setOpen(false)}
           placeholder={placeholder}
           required
-          className="w-full rounded-lg border border-ink-200 bg-white py-2.5 pr-3 pl-9 text-sm text-ink-900 outline-none transition focus:border-amber-500 focus:ring-2 focus:ring-amber-500/20"
+          className="w-full rounded-lg border border-ink-200 bg-white py-2.5 pr-3 pl-9 text-sm text-ink-900 outline-none transition focus:border-amber-500 focus:ring-2 focus:ring-amber-500/20 dark:border-ink-700 dark:bg-ink-900 dark:text-ink-50"
         />
       </div>
       {open && suggestions.length > 0 && (
-        <ul className="absolute z-20 mt-1 w-full overflow-hidden rounded-lg border border-ink-200 bg-white py-1 shadow-lg">
+        <ul className="absolute z-20 mt-1 w-full overflow-hidden rounded-lg border border-ink-200 bg-white py-1 shadow-lg dark:border-ink-700 dark:bg-ink-900">
           {suggestions.map((s, idx) => (
             <li key={`${s.lat}-${s.lon}-${idx}`}>
               <button
@@ -97,10 +97,12 @@ export default function LocationInput({ id, label, placeholder, value, onChange,
                 onMouseDown={(e) => e.preventDefault()}
                 onClick={() => selectSuggestion(s)}
                 className={`flex w-full items-start gap-2 px-3 py-2 text-left text-sm ${
-                  idx === activeIndex ? "bg-amber-500/10 text-ink-900" : "text-ink-700 hover:bg-ink-50"
+                  idx === activeIndex
+                    ? "bg-amber-500/10 text-ink-900 dark:text-ink-50"
+                    : "text-ink-700 hover:bg-ink-50 dark:text-ink-300 dark:hover:bg-ink-800"
                 }`}
               >
-                <MapPin className="mt-0.5 h-3.5 w-3.5 shrink-0 text-ink-500" />
+                <MapPin className="mt-0.5 h-3.5 w-3.5 shrink-0 text-ink-500 dark:text-ink-400" />
                 <span className="min-w-0">{s.label}</span>
               </button>
             </li>

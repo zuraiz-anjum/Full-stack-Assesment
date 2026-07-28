@@ -58,9 +58,9 @@ export default function TripForm({ onSubmit, submitting, errorMessage }) {
   const cycleHours = Number(form.currentCycleUsedHours) || 0;
 
   return (
-    <form onSubmit={handleSubmit} className="rounded-xl border border-ink-100 bg-white p-6 sm:p-7">
-      <h2 className="text-xl font-bold tracking-tight text-ink-950">Plan a trip</h2>
-      <p className="mt-1.5 text-sm text-ink-500">
+    <form onSubmit={handleSubmit} className="rounded-xl border border-ink-100 bg-white p-6 sm:p-7 dark:border-ink-800 dark:bg-ink-900/40">
+      <h2 className="text-xl font-bold tracking-tight text-ink-950 dark:text-ink-50">Plan a trip</h2>
+      <p className="mt-1.5 text-sm text-ink-500 dark:text-ink-400">
         Enter your current position and the load's pickup and drop-off points. We'll build the
         route and a compliant set of daily ELD logs for the whole trip.
       </p>
@@ -94,7 +94,7 @@ export default function TripForm({ onSubmit, submitting, errorMessage }) {
         />
 
         <div className="sm:col-span-2">
-          <label htmlFor="cycle" className="mb-1.5 block text-sm font-medium text-ink-700">
+          <label htmlFor="cycle" className="mb-1.5 block text-sm font-medium text-ink-700 dark:text-ink-300">
             Current cycle used (hours)
           </label>
           <div className="flex items-center gap-4">
@@ -107,7 +107,7 @@ export default function TripForm({ onSubmit, submitting, errorMessage }) {
               step="0.5"
               value={cycleHours}
               onChange={(e) => update("currentCycleUsedHours", e.target.value)}
-              className="h-1.5 flex-1 cursor-pointer appearance-none rounded-full bg-ink-200 accent-amber-500"
+              className="h-1.5 flex-1 cursor-pointer appearance-none rounded-full bg-ink-200 accent-amber-500 dark:bg-ink-700"
             />
             <input
               id="cycle"
@@ -119,11 +119,11 @@ export default function TripForm({ onSubmit, submitting, errorMessage }) {
               onChange={(e) => update("currentCycleUsedHours", e.target.value)}
               placeholder="0"
               required
-              className="w-20 rounded-lg border border-ink-200 bg-white px-2.5 py-2 text-center text-sm outline-none focus:border-amber-500 focus:ring-2 focus:ring-amber-500/20"
+              className="w-20 rounded-lg border border-ink-200 bg-white px-2.5 py-2 text-center text-sm outline-none focus:border-amber-500 focus:ring-2 focus:ring-amber-500/20 dark:border-ink-700 dark:bg-ink-900 dark:text-ink-50"
             />
-            <span className="text-sm text-ink-500">/ 70 hrs</span>
+            <span className="text-sm text-ink-500 dark:text-ink-400">/ 70 hrs</span>
           </div>
-          <p className="mt-1.5 text-xs text-ink-500">
+          <p className="mt-1.5 text-xs text-ink-500 dark:text-ink-400">
             Hours already on duty in the current 70-hour/8-day cycle, per your ELD.
           </p>
         </div>
@@ -132,7 +132,7 @@ export default function TripForm({ onSubmit, submitting, errorMessage }) {
       <button
         type="button"
         onClick={() => setDetailsOpen((v) => !v)}
-        className="mt-5 flex w-full items-center justify-between rounded-lg border border-ink-100 bg-ink-50 px-3 py-2.5 text-sm font-medium text-ink-600 transition hover:border-ink-200 hover:bg-ink-100"
+        className="mt-5 flex w-full items-center justify-between rounded-lg border border-ink-100 bg-ink-50 px-3 py-2.5 text-sm font-medium text-ink-600 transition hover:border-ink-200 hover:bg-ink-100 dark:border-ink-800 dark:bg-ink-900 dark:text-ink-300 dark:hover:border-ink-700 dark:hover:bg-ink-800"
       >
         <span className="flex items-center gap-2">
           <Truck className="h-4 w-4" />
@@ -147,7 +147,7 @@ export default function TripForm({ onSubmit, submitting, errorMessage }) {
         <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2">
           {VEHICLE_FIELDS.map((f) => (
             <div key={f.key} className={f.key === "shippingDocNumber" ? "sm:col-span-2" : ""}>
-              <label htmlFor={f.key} className="mb-1.5 block text-sm font-medium text-ink-700">
+              <label htmlFor={f.key} className="mb-1.5 block text-sm font-medium text-ink-700 dark:text-ink-300">
                 {f.label}
               </label>
               <input
@@ -156,11 +156,11 @@ export default function TripForm({ onSubmit, submitting, errorMessage }) {
                 value={form[f.key]}
                 onChange={(e) => update(f.key, e.target.value)}
                 placeholder={f.placeholder}
-                className="w-full rounded-lg border border-ink-200 bg-white px-3 py-2.5 text-sm text-ink-900 outline-none transition focus:border-amber-500 focus:ring-2 focus:ring-amber-500/20"
+                className="w-full rounded-lg border border-ink-200 bg-white px-3 py-2.5 text-sm text-ink-900 outline-none transition focus:border-amber-500 focus:ring-2 focus:ring-amber-500/20 dark:border-ink-700 dark:bg-ink-900 dark:text-ink-50"
               />
             </div>
           ))}
-          <p className="text-xs text-ink-500 sm:col-span-2">
+          <p className="text-xs text-ink-500 sm:col-span-2 dark:text-ink-400">
             These fill in the carrier/vehicle fields on the printed daily log sheets. Leave blank
             and they'll just show as empty on the form, same as a driver who fills it in later.
           </p>
@@ -168,7 +168,7 @@ export default function TripForm({ onSubmit, submitting, errorMessage }) {
       )}
 
       {errorMessage && (
-        <div className="mt-5 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+        <div className="mt-5 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700 dark:border-red-900/50 dark:bg-red-950/40 dark:text-red-300">
           {errorMessage}
         </div>
       )}
