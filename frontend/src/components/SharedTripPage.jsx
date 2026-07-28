@@ -4,6 +4,7 @@ import { extractErrorMessage, getSharedTrip, sharedTripPdfUrl } from "../lib/api
 import DailyLogSheet from "./DailyLogSheet";
 import ErrorBoundary from "./ErrorBoundary";
 import RouteDirections from "./RouteDirections";
+import RouteMark from "./RouteMark";
 import SummaryCards from "./SummaryCards";
 
 const MapView = lazy(() => import("./MapView"));
@@ -104,7 +105,10 @@ export default function SharedTripPage({ shareToken }) {
           <div className="flex items-center gap-2">
             <Truck className="h-5 w-5 text-ink-950" strokeWidth={1.75} />
             <div>
-              <p className="text-sm font-bold tracking-tight text-ink-950">RouteLog</p>
+              <p className="flex items-center gap-2 text-sm font-bold tracking-tight text-ink-950">
+                RouteLog
+                <RouteMark />
+              </p>
               <p className="text-xs text-ink-500">Shared trip (read-only)</p>
             </div>
           </div>
