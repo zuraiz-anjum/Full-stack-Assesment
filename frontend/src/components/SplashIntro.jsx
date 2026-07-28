@@ -1,5 +1,6 @@
 import { Truck } from "lucide-react";
 import { useEffect, useState } from "react";
+import RouteMark from "./RouteMark";
 
 const DRIVE_MS = 2400;
 const HOLD_MS = 300;
@@ -30,7 +31,10 @@ export default function SplashIntro() {
     >
       <div className="flex items-center gap-2.5">
         <Truck className="h-7 w-7 text-ink-950" strokeWidth={1.75} />
-        <p className="text-lg font-semibold tracking-tight text-ink-950">RouteLog</p>
+        <p className="flex items-center gap-2.5 text-lg font-semibold tracking-tight text-ink-950">
+          RouteLog
+          <RouteMark className="scale-110" />
+        </p>
       </div>
 
       <div className="drive-track relative mt-10 h-10 w-64 overflow-hidden sm:w-80">
