@@ -68,7 +68,7 @@ export default function TripResults({ result, vehicleInfo, tripId, shareToken })
   return (
     <>
       <div className="print-hide space-y-6">
-        <ComplianceBadge key={tripId} />
+        <ComplianceBadge key={tripId} result={result} />
         <SummaryCards summary={result.summary} route={result.route} />
         <div>
           <div className="mb-2 flex items-center justify-between">

@@ -52,7 +52,7 @@ function SharedTripContent({ trip }) {
 
   return (
     <div className="space-y-6">
-      <ComplianceBadge />
+      <ComplianceBadge result={result} />
       <SummaryCards summary={result.summary} route={result.route} />
       <div className="h-[280px] sm:h-[420px]">
         <Suspense fallback={<MapSkeleton />}>

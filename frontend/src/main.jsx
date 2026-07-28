@@ -2,16 +2,22 @@ import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import App from './App.jsx'
 import ErrorBoundary from './components/ErrorBoundary.jsx'
+import NotFoundPage from './components/NotFoundPage.jsx'
 import SharedTripPage from './components/SharedTripPage.jsx'
 import SplashIntro from './components/SplashIntro.jsx'
+import { ThemeProvider } from './lib/ThemeContext.jsx'
 import { forceLightForPrint } from './lib/theme.js'
 import './index.css'
 
-// No client-side router for one extra screen -- a shared trip link is just
-// a path of the form /shared/<uuid>, checked once at load time.
+// No client-side router for two extra screens -- a shared trip link is just
+// a path of the form /shared/<uuid>, checked once at load time. Anything
+// else (Vercel rewrites every path to this same index.html, so there's no
+// server-side 404) falls through to the client-rendered NotFoundPage below.
 const sharedMatch = window.location.pathname.match(
   /^\/shared\/([0-9a-f-]{36})\/?$/i,
 )
+const normalizedPath = window.location.pathname.replace(/\/+$/, '') || '/'
+const isKnownRoute = normalizedPath === '/' || !!sharedMatch
 
 forceLightForPrint()
 
@@ -36,8 +42,16 @@ function rootFallback() {
 createRoot(document.getElementById('root')).render(
   <StrictMode>
     <ErrorBoundary fallback={rootFallback}>
-      <SplashIntro />
-      {sharedMatch ? <SharedTripPage shareToken={sharedMatch[1]} /> : <App />}
+      <ThemeProvider>
+        {isKnownRoute ? (
+          <>
+            <SplashIntro />
+            {sharedMatch ? <SharedTripPage shareToken={sharedMatch[1]} /> : <App />}
+          </>
+        ) : (
+          <NotFoundPage />
+        )}
+      </ThemeProvider>
     </ErrorBoundary>
   </StrictMode>,
 )

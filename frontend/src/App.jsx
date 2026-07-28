@@ -1,13 +1,17 @@
-import { AlertTriangle, Truck } from "lucide-react";
+import { AlertTriangle, Search, Truck } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
+import CommandPalette from "./components/CommandPalette";
 import ErrorBoundary from "./components/ErrorBoundary";
 import GlobeHero from "./components/GlobeHero";
+import PlanningStatus from "./components/PlanningStatus";
 import RouteMark from "./components/RouteMark";
 import ThemeToggle from "./components/ThemeToggle";
 import TripForm from "./components/TripForm";
 import TripHistorySidebar from "./components/TripHistorySidebar";
 import TripResults from "./components/TripResults";
 import { extractErrorMessage, getTrip, listTrips, planTrip } from "./lib/api";
+
+const isMac = typeof navigator !== "undefined" && /Mac|iPhone|iPad/.test(navigator.platform ?? navigator.userAgent);
 
 function tripResultsFallback(reset) {
   return (
@@ -117,6 +121,14 @@ export default function App() {
             <p className="hidden text-xs text-ink-500 sm:block dark:text-ink-400">
               Property carrier · 70&nbsp;hrs/8&nbsp;days · No adverse conditions
             </p>
+            <button
+              type="button"
+              onClick={() => window.dispatchEvent(new Event("routelog:open-command-palette"))}
+              className="flex items-center gap-1.5 rounded-lg border border-ink-100 px-2.5 py-1.5 text-xs text-ink-500 transition hover:border-ink-200 hover:bg-ink-50 dark:border-ink-800 dark:text-ink-400 dark:hover:border-ink-700 dark:hover:bg-ink-800"
+            >
+              <Search className="h-3.5 w-3.5" />
+              <kbd className="hidden font-sans sm:inline">{isMac ? "⌘K" : "Ctrl K"}</kbd>
+            </button>
             <ThemeToggle />
           </div>
         </div>
@@ -135,7 +147,9 @@ export default function App() {
           </aside>
 
           <section ref={resultsRef} className="min-w-0 space-y-6">
-            {!result && (
+            {!result && submitting && <PlanningStatus />}
+
+            {!result && !submitting && (
               <div className="flex h-full min-h-[420px] flex-col items-center justify-center rounded-xl border border-dashed border-ink-200 bg-white/40 px-6 text-center dark:border-ink-800 dark:bg-ink-900/30">
                 <GlobeHero />
                 <h2 className="mt-1 text-2xl font-bold tracking-tight text-ink-950 sm:text-3xl dark:text-ink-50">
@@ -171,6 +185,13 @@ export default function App() {
         driving conditions, a fuel stop every 1,000 miles, and 1 hour each for pickup and
         drop-off.
       </footer>
+
+      <CommandPalette
+        trips={history}
+        onSelectTrip={handleSelectTrip}
+        onNewTrip={() => setTrip(null)}
+        activeTrip={trip}
+      />
     </div>
   );
 }
