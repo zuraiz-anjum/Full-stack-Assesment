@@ -66,6 +66,10 @@ class RouteLeg:
     name: str
     distance_miles: float
     duration_hours: float
+    # Human-readable version of `name` for remarks/PDF text -- `name` itself
+    # stays an internal id ("current -> pickup") since it's also used as a
+    # dict key elsewhere, so it can't just be swapped for display text.
+    display_label: str = ""
 
     @property
     def avg_speed_mph(self) -> float:
@@ -272,7 +276,7 @@ def simulate_trip(
             _append(
                 DutyStatus.DRIVING,
                 chunk,
-                f"Driving — {leg.name}",
+                leg.display_label or f"Driving — {leg.name}",
                 leg_name=leg.name,
                 miles=chunk_miles,
                 leg_progress_fraction=min(fraction_start, 1.0),

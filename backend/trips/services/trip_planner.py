@@ -56,8 +56,8 @@ def plan_trip(
     leg2_route = get_route(pickup, dropoff)
 
     legs = [
-        RouteLeg(LEG_CURRENT_TO_PICKUP, leg1_route.distance_miles, leg1_route.duration_hours),
-        RouteLeg(LEG_PICKUP_TO_DROPOFF, leg2_route.distance_miles, leg2_route.duration_hours),
+        RouteLeg(LEG_CURRENT_TO_PICKUP, leg1_route.distance_miles, leg1_route.duration_hours, "Driving to pickup"),
+        RouteLeg(LEG_PICKUP_TO_DROPOFF, leg2_route.distance_miles, leg2_route.duration_hours, "Driving to drop-off"),
     ]
 
     segments = simulate_trip(legs, current_cycle_used_hours, start_datetime)
