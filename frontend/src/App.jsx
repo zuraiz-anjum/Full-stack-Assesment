@@ -144,6 +144,7 @@ export default function App() {
               onSelect={handleSelectTrip}
               activeTripId={trip?.id}
               loading={historyLoading}
+              disabled={submitting}
             />
           </aside>
 
@@ -192,6 +193,7 @@ export default function App() {
         onSelectTrip={handleSelectTrip}
         onNewTrip={() => setTrip(null)}
         activeTrip={trip}
+        submitting={submitting}
       />
     </div>
   );

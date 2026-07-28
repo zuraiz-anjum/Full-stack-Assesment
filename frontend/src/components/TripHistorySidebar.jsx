@@ -1,6 +1,6 @@
 import { ArrowRight, Clock3, History } from "lucide-react";
 
-export default function TripHistorySidebar({ trips, onSelect, activeTripId, loading }) {
+export default function TripHistorySidebar({ trips, onSelect, activeTripId, loading, disabled }) {
   return (
     <div className="rounded-xl border border-ink-100 bg-white p-5 dark:border-ink-800 dark:bg-ink-900/40">
       <div className="mb-3 flex items-center gap-2 text-sm font-semibold text-ink-950 dark:text-ink-50">
@@ -19,7 +19,8 @@ export default function TripHistorySidebar({ trips, onSelect, activeTripId, load
             <button
               type="button"
               onClick={() => onSelect(trip.id)}
-              className={`group flex w-full items-center justify-between gap-2 rounded-lg px-3 py-2.5 text-left text-sm transition ${
+              disabled={disabled}
+              className={`group flex w-full items-center justify-between gap-2 rounded-lg px-3 py-2.5 text-left text-sm transition disabled:pointer-events-none disabled:opacity-50 ${
                 trip.id === activeTripId
                   ? "bg-ink-950 text-white"
                   : "text-ink-700 hover:bg-ink-50 dark:text-ink-300 dark:hover:bg-ink-800"

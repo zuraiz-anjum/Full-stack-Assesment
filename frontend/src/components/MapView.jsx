@@ -271,7 +271,13 @@ function FitBounds({ geometry }) {
   const map = useMap();
   useMemo(() => {
     if (geometry && geometry.length > 1) {
-      map.fitBounds(geometry, { padding: [40, 40] });
+      // A degenerate route (current/pickup/dropoff all the same point, or
+      // close enough to round to it) collapses the bounding box to ~zero
+      // area, and fitBounds happily zooms all the way in to the tile
+      // provider's max zoom (building-level detail) trying to "fill" it.
+      // Capping maxZoom keeps that case showing a sane city-level view
+      // instead of a random street corner.
+      map.fitBounds(geometry, { padding: [40, 40], maxZoom: 13 });
     }
   }, [geometry, map]);
   return null;

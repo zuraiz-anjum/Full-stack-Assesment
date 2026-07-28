@@ -37,7 +37,7 @@ async function handleShareImage(result, tripId) {
 // keys move the selection, Enter runs it. The command list is built fresh
 // each render from props so it only ever shows actions that are actually
 // possible right now (no "Download PDF" with nothing to download).
-export default function CommandPalette({ trips, onSelectTrip, onNewTrip, activeTrip }) {
+export default function CommandPalette({ trips, onSelectTrip, onNewTrip, activeTrip, submitting }) {
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState("");
   const [activeIndex, setActiveIndex] = useState(0);
@@ -82,21 +82,28 @@ export default function CommandPalette({ trips, onSelectTrip, onNewTrip, activeT
       setOpen(false);
       fn();
     };
-    const commands = [
-      {
+    const commands = [];
+    // A trip currently being planned will call setTrip(created) once it
+    // resolves -- jumping to a different trip (a reset or a history pick)
+    // in the meantime would just get silently clobbered when that finally
+    // lands, so both are left out of the list entirely while submitting
+    // rather than letting the user start an interaction that's going to
+    // lose to a race a few seconds later.
+    if (!submitting) {
+      commands.push({
         id: "new-trip",
         icon: Plus,
         label: "Plan a new trip",
         hint: "Reset the form",
         run: close(() => onNewTrip()),
-      },
-      {
-        id: "toggle-theme",
-        icon: theme === "dark" ? Sun : Moon,
-        label: theme === "dark" ? "Switch to light mode" : "Switch to night driving mode",
-        run: close(toggleTheme),
-      },
-    ];
+      });
+    }
+    commands.push({
+      id: "toggle-theme",
+      icon: theme === "dark" ? Sun : Moon,
+      label: theme === "dark" ? "Switch to light mode" : "Switch to night driving mode",
+      run: close(toggleTheme),
+    });
     if (activeTrip?.id) {
       commands.push({
         id: "download-pdf",
@@ -127,17 +134,19 @@ export default function CommandPalette({ trips, onSelectTrip, onNewTrip, activeT
       });
     }
 
-    const tripItems = (trips ?? []).map((t) => ({
-      id: `trip-${t.id}`,
-      icon: History,
-      label: `${t.pickup_location} → ${t.dropoff_location}`,
-      hint: new Date(t.created_at).toLocaleDateString(),
-      group: "Recent trips",
-      run: close(() => onSelectTrip(t.id)),
-    }));
+    const tripItems = submitting
+      ? []
+      : (trips ?? []).map((t) => ({
+          id: `trip-${t.id}`,
+          icon: History,
+          label: `${t.pickup_location} → ${t.dropoff_location}`,
+          hint: new Date(t.created_at).toLocaleDateString(),
+          group: "Recent trips",
+          run: close(() => onSelectTrip(t.id)),
+        }));
 
     return [...commands, ...tripItems];
-  }, [trips, activeTrip, theme, toggleTheme, onNewTrip, onSelectTrip]);
+  }, [trips, activeTrip, theme, toggleTheme, onNewTrip, onSelectTrip, submitting]);
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
