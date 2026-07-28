@@ -1,6 +1,7 @@
 import { AlertTriangle, Truck } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import ErrorBoundary from "./components/ErrorBoundary";
+import GlobeHero from "./components/GlobeHero";
 import RouteMark from "./components/RouteMark";
 import TripForm from "./components/TripForm";
 import TripHistorySidebar from "./components/TripHistorySidebar";
@@ -132,36 +133,8 @@ export default function App() {
           <section ref={resultsRef} className="min-w-0 space-y-6">
             {!result && (
               <div className="flex h-full min-h-[420px] flex-col items-center justify-center rounded-xl border border-dashed border-ink-200 bg-white/40 px-6 text-center">
-                <div className="relative h-28 w-full max-w-md">
-                  <svg
-                    className="absolute inset-0 h-full w-full"
-                    viewBox="0 0 400 100"
-                    preserveAspectRatio="xMidYMid meet"
-                    aria-hidden="true"
-                  >
-                    <path
-                      d="M10 72 Q 80 18, 155 52 T 300 40 T 385 22"
-                      stroke="var(--color-ink-200)"
-                      strokeWidth="2.5"
-                      fill="none"
-                      className="road-dashed"
-                    />
-                    {[[90, 40], [230, 44], [340, 28]].map(([x, y], i) => (
-                      <circle key={i} cx={x} cy={y} r="2.5" fill="var(--color-ink-300)" />
-                    ))}
-                    <circle cx="385" cy="22" r="6" fill="var(--color-amber-600)" />
-                    <circle cx="385" cy="22" r="2.3" fill="white" />
-                  </svg>
-                  <div
-                    className="absolute text-ink-950"
-                    style={{ left: "38%", top: "52%", transform: "translate(-50%, -55%)" }}
-                  >
-                    <div style={{ animation: "truck-bob 1.8s ease-in-out infinite" }}>
-                      <Truck className="h-8 w-8" />
-                    </div>
-                  </div>
-                </div>
-                <h2 className="mt-3 text-2xl font-bold tracking-tight text-ink-950 sm:text-3xl">
+                <GlobeHero />
+                <h2 className="mt-1 text-2xl font-bold tracking-tight text-ink-950 sm:text-3xl">
                   Where to next?
                 </h2>
                 <p className="mt-2 max-w-sm text-sm text-ink-500">
